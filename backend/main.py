@@ -8,22 +8,62 @@ app = FastAPI()
 class ScoutConfig(BaseModel):
     timeRange: str
 
+class ChatRequest(BaseModel):
+    report_context: str
+    user_message: str
+
+class EmailRequest(BaseModel):
+    insight_text: str
+    recipient_name: str = "Client"
+
+class DeepDiveRequest(BaseModel):
+    topic: str
+
+class AudioRequest(BaseModel):
+    report_text: str
+
+class BattlecardRequest(BaseModel):
+    competitors: list[str]
+
 from fastapi.responses import FileResponse
-from agent import run_agent
+from agent import run_agent, chat_with_report, generate_sales_email, deep_dive_search, generate_audio_summary, generate_swot
 import os
 
 @app.post("/api/run")
 async def run_scout(config: ScoutConfig):
-    # Call the real agent logic
-    report = run_agent(config.timeRange)
-    
-    return {"status": "success", "report": report}
+    report_text = run_agent(config.timeRange)
+    return {"report": report_text, "pdf_url": "/api/report/pdf"}
 
-@app.get("/api/download_pdf")
-async def download_pdf():
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
+    response = chat_with_report(request.report_context, request.user_message)
+    return {"response": response}
+
+@app.post("/api/draft_email")
+async def draft_email(request: EmailRequest):
+    email = generate_sales_email(request.insight_text, request.recipient_name)
+    return {"email": email}
+
+@app.post("/api/deep_dive")
+async def deep_dive(request: DeepDiveRequest):
+    summary = deep_dive_search(request.topic)
+    return {"summary": summary}
+
+@app.post("/api/audio")
+async def generate_audio(request: AudioRequest):
+    audio_path = generate_audio_summary(request.report_text)
+    return FileResponse(audio_path, media_type="audio/mpeg", filename="briefing.mp3")
+
+@app.post("/api/battlecards")
+async def battlecards(request: BattlecardRequest):
+    cards = generate_swot(request.competitors)
+    return {"cards": cards}
+
+@app.get("/api/report/pdf")
+async def get_report_pdf():
     file_path = "dcga_report.pdf"
     if os.path.exists(file_path):
-        return FileResponse(file_path, media_type='application/pdf', filename="DCGA_Intelligence_Report.pdf")
+        return FileResponse(file_path, media_type="application/pdf", filename="dcga_report.pdf")
     return {"error": "Report not found"}
 
 @app.get("/health")

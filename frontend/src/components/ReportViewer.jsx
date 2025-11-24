@@ -1,9 +1,9 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Download } from 'lucide-react'
+import { Download, Compass, Check } from 'lucide-react'
 
-export default function ReportViewer({ report }) {
+export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} }) {
     // Pre-process the report to convert tags into special links
     // This ensures they are parsed correctly regardless of context (bold, blockquote, etc.)
     const processedReport = React.useMemo(() => {
@@ -77,7 +77,78 @@ export default function ReportViewer({ report }) {
                         h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.8rem', borderBottom: '1px solid #334155', paddingBottom: '0.5rem', marginTop: '1.5rem' }} {...props} />,
                         h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.4rem', color: '#60a5fa', marginTop: '1.5rem', marginBottom: '0.75rem' }} {...props} />,
                         ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
-                        li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem', lineHeight: '1.6' }} {...props} />,
+                        li: ({ node, children, ...props }) => {
+                            // Extract text content from children for deep dive (recursively)
+                            const extractText = (child) => {
+                                if (typeof child === 'string') return child
+                                if (typeof child === 'number') return String(child)
+                                if (React.isValidElement(child) && child.props.children) {
+                                    return extractText(child.props.children)
+                                }
+                                if (Array.isArray(child)) {
+                                    return child.map(extractText).join('')
+                                }
+                                return ''
+                            }
+
+                            let textContent = extractText(children).trim()
+
+                            // Truncate to 300 chars for deep dive (backend limit is 400)
+                            if (textContent.length > 300) {
+                                textContent = textContent.substring(0, 300).trim() + '...'
+                            }
+
+                            const isDone = deepDiveCache[textContent] !== undefined
+
+                            return (
+                                <li style={{ marginBottom: '0.5rem', lineHeight: '1.6', display: 'flex', alignItems: 'flex-start', gap: '8px', position: 'relative' }} {...props}>
+                                    <span style={{ flex: 1 }}>{children}</span>
+                                    {onDeepDive && textContent && (
+                                        <button
+                                            onClick={() => onDeepDive(textContent)}
+                                            className="deep-dive-btn"
+                                            style={{
+                                                background: isDone
+                                                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                                                    : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                                border: 'none',
+                                                color: 'white',
+                                                cursor: 'pointer',
+                                                padding: '4px 8px',
+                                                borderRadius: '6px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                flexShrink: 0,
+                                                boxShadow: isDone
+                                                    ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                                    : '0 2px 8px rgba(59, 130, 246, 0.3)',
+                                                transition: 'all 0.2s',
+                                                transform: 'scale(1)'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                e.currentTarget.style.transform = 'scale(1.05)'
+                                                e.currentTarget.style.boxShadow = isDone
+                                                    ? '0 4px 12px rgba(16, 185, 129, 0.5)'
+                                                    : '0 4px 12px rgba(59, 130, 246, 0.5)'
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = 'scale(1)'
+                                                e.currentTarget.style.boxShadow = isDone
+                                                    ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                                    : '0 2px 8px rgba(59, 130, 246, 0.3)'
+                                            }}
+                                            title={isDone ? "View cached deep dive" : "Deep Dive into this topic"}
+                                        >
+                                            {isDone ? <Check size={12} /> : <Compass size={12} />}
+                                            <span style={{ fontSize: '0.7rem' }}>{isDone ? 'Done' : 'Dive'}</span>
+                                        </button>
+                                    )}
+                                </li>
+                            )
+                        },
                         p: ({ node, ...props }) => <p style={{ lineHeight: '1.6', marginBottom: '1rem' }} {...props} />,
                         strong: ({ node, ...props }) => <strong style={{ color: '#f8fafc', fontWeight: 600 }} {...props} />,
 

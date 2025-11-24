@@ -1,11 +1,18 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import ConfigPanel from './components/ConfigPanel'
 import ReportViewer from './components/ReportViewer'
-import { ShieldAlert, Search, FileText } from 'lucide-react'
+import ScanningAnimation from './components/ScanningAnimation'
+import DeepDiveModal from './components/DeepDiveModal'
+import { ShieldAlert, Search, FileText, Volume2 } from 'lucide-react'
 
 function App() {
     const [loading, setLoading] = useState(false)
     const [report, setReport] = useState(null)
+    const [deepDiveTopic, setDeepDiveTopic] = useState(null)
+    const [deepDiveCache, setDeepDiveCache] = useState({}) // Cache deep dive results
+    const [audioUrl, setAudioUrl] = useState(null)
+    const [audioLoading, setAudioLoading] = useState(false)
+    const audioRef = useRef(null)
 
     const handleRunScout = async (config) => {
         setLoading(true)
@@ -22,24 +29,43 @@ function App() {
             setReport(data.report)
         } catch (error) {
             console.error("Failed to run scout:", error)
-            // Mock fallback for demo if backend isn't running
-            setTimeout(() => {
-                setReport(`# 🕵️ DCGA Scout Intelligence Report
-*Period: Last 7 Days*
-
-## 🚨 Immediate Action Required
-* **Microsoft Graph API**: Deprecated the "Teams Export API v1". Engineering to review immediately.
-
-## 📉 Competitor Weakness Watch
-* **Smarsh (G2 Reviews)**: 2 users complained about "slow search" this period. Use this in competitive deals.
-
-## 🏛️ Regulatory Tailwinds
-* **SEC**: Fined Firm X $5M for WhatsApp usage.
-`)
-            }, 1500)
+            alert("Failed to generate report. Please check that the backend is running.")
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleGenerateAudio = async () => {
+        if (!report) return
+        setAudioLoading(true)
+        setAudioUrl(null)
+        try {
+            console.log('Generating audio...')
+            const response = await fetch('/api/audio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ report_text: report })
+            })
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+            const blob = await response.blob()
+            const url = URL.createObjectURL(blob)
+            setAudioUrl(url)
+            console.log('Audio generated successfully!')
+        } catch (error) {
+            console.error('Error generating audio:', error)
+            alert('Failed to generate audio. Check console for details.')
+        } finally {
+            setAudioLoading(false)
+        }
+    }
+
+    const handleSaveDeepDive = (topic, data) => {
+        setDeepDiveCache(prev => ({
+            ...prev,
+            [topic]: data
+        }))
     }
 
     return (
@@ -66,9 +92,73 @@ function App() {
                 <ConfigPanel onRun={handleRunScout} loading={loading} />
             </div>
 
+            {/* Action Bar - Audio Briefing */}
+            {report && (
+                <div style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    marginBottom: '2rem',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    flexWrap: 'wrap'
+                }}>
+                    {/* Audio Section - Button + Player */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                        <button
+                            onClick={handleGenerateAudio}
+                            disabled={audioLoading || audioUrl}
+                            style={{
+                                background: audioUrl ? '#10b981' : (audioLoading ? '#9ca3af' : 'var(--accent-secondary)'),
+                                color: 'white',
+                                border: 'none',
+                                padding: '0.5rem 1rem',
+                                borderRadius: '0.5rem',
+                                cursor: (audioLoading || audioUrl) ? 'not-allowed' : 'pointer',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                transition: 'all 0.2s',
+                                opacity: audioUrl ? 0.9 : 1
+                            }}
+                        >
+                            <Volume2 size={18} />
+                            {audioLoading ? '⏳ Generating...' : (audioUrl ? '✅ Audio Ready' : '🎧 Generate Audio Briefing')}
+                        </button>
+
+                        {/* Inline Audio Player */}
+                        {audioUrl && (
+                            <audio
+                                ref={audioRef}
+                                controls
+                                src={audioUrl}
+                                onLoadedMetadata={() => {
+                                    if (audioRef.current) {
+                                        audioRef.current.playbackRate = 1.25
+                                    }
+                                }}
+                                style={{
+                                    height: '40px',
+                                    borderRadius: '8px'
+                                }}
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
+
+
             <main className="report-section" style={{ maxWidth: '900px', margin: '0 auto' }}>
-                {report ? (
-                    <ReportViewer report={report} />
+                {loading ? (
+                    <div className="card">
+                        <ScanningAnimation />
+                    </div>
+                ) : report ? (
+                    <ReportViewer
+                        report={report}
+                        onDeepDive={(topic) => setDeepDiveTopic(topic)}
+                        deepDiveCache={deepDiveCache}
+                    />
                 ) : (
                     <div className="card" style={{
                         height: '400px',
@@ -94,6 +184,16 @@ function App() {
                     </div>
                 )}
             </main>
+
+            {/* Deep Dive Modal */}
+            {deepDiveTopic && (
+                <DeepDiveModal
+                    initialTopic={deepDiveTopic}
+                    cachedData={deepDiveCache[deepDiveTopic]}
+                    onSaveCache={handleSaveDeepDive}
+                    onClose={() => setDeepDiveTopic(null)}
+                />
+            )}
         </div>
     )
 }

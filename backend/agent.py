@@ -7,6 +7,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 import markdown
+from gtts import gTTS
 
 load_dotenv()
 
@@ -236,3 +237,195 @@ def run_agent(time_range: str):
         print(f"PDF Generation failed: {e}")
 
     return report_markdown
+
+# --- v2.0 Features ---
+
+def chat_with_report(report_context: str, user_message: str):
+    """
+    Feature 1: Scout Chat (RAG)
+    Uses Gemini to answer questions based on the report context.
+    """
+    if not model:
+        return "Error: Gemini API key not configured."
+    
+    prompt = f"""
+    You are an intelligent assistant for the DCGA Scout.
+    Your goal is to answer user questions based ONLY on the provided report context.
+    
+    Report Context:
+    {report_context}
+    
+    User Question: {user_message}
+    
+    Answer concisely and professionally.
+    """
+    try:
+        response = model.generate_content(prompt).text
+        return response
+    except Exception as e:
+        return f"Error generating chat response: {e}"
+
+def generate_sales_email(insight_text: str, recipient_name: str):
+    """
+    Feature 2: Sales Co-Pilot
+    Generates a sales outreach email based on a specific insight.
+    """
+    if not model:
+        return "Error: Gemini API key not configured."
+        
+    prompt = f"""
+    You are a top-tier enterprise sales representative for Theta Lake.
+    Write a short, punchy, and professional outreach email to a prospect named {recipient_name}.
+    
+    The email should be based on this specific market insight:
+    "{insight_text}"
+    
+    Value Proposition to weave in:
+    - Theta Lake provides "Unified Capture" and "Proactive Compliance".
+    - We help firms enable modern collaboration (Zoom, Teams) without compliance risks.
+    
+    Structure:
+    1. Subject Line (Catchy but professional)
+    2. Hook (The insight)
+    3. The "So What?" (Why they should care)
+    4. Call to Action (Meeting request)
+    """
+    try:
+        email = model.generate_content(prompt).text
+        return email
+    except Exception as e:
+        return f"Error generating email: {e}"
+
+def deep_dive_search(topic: str):
+    """
+    Feature 3: Deep Dive Agent
+    Performs a targeted search on a specific topic to get more details.
+    """
+    if not tavily:
+        return "Error: Tavily API key not configured."
+        
+    try:
+        # Search for detailed analysis and news
+        query = f"{topic} analysis details implications compliance"
+        results = tavily.search(query=query, topic="general", days=30, max_results=5)
+        
+        # Summarize with Gemini
+        if model:
+            prompt = f"""
+            Summarize the following search results into a detailed "Deep Dive" briefing on the topic: "{topic}".
+            Focus on strategic implications for compliance and risk teams.
+            
+            Search Results:
+            {results}
+            """
+            summary = model.generate_content(prompt).text
+            return summary
+        else:
+            return f"Search Results:\n{results}"
+            
+    except Exception as e:
+        return f"Error performing deep dive: {e}"
+
+def generate_audio_summary(report_text: str):
+    """
+    Feature 4: Audio Briefing
+    Generates an MP3 summary of the report using gTTS.
+    """
+    try:
+        # 1. Summarize the report first (Audio needs to be shorter than the full text)
+        if model:
+            prompt = f"""
+            Convert the following report into a 2-minute "Podcast Script" for an audio briefing.
+            
+            CRITICAL INSTRUCTIONS:
+            - Use PLAIN TEXT ONLY - no markdown, no asterisks, no special characters
+            - Write it exactly as a narrator would speak it
+            - Keep it conversational and engaging
+            - Focus on the top 3 most important takeaways
+            - Start with "Welcome to your DCGA Scout Daily Briefing."
+            - Do NOT use any formatting like *, **, #, >, or bullet points
+            
+            Report:
+            {report_text[:10000]}
+            """
+            script = model.generate_content(prompt).text
+            
+            # Safety: Strip any remaining markdown characters
+            import re
+            # Remove markdown headers
+            script = re.sub(r'#+\s*', '', script)
+            # Remove bold/italic markers
+            script = re.sub(r'\*+', '', script)
+            # Remove blockquotes
+            script = re.sub(r'>\s*', '', script)
+            # Remove bullet points
+            script = re.sub(r'^\s*[-*]\s+', '', script, flags=re.MULTILINE)
+            # Remove links [text](url)
+            script = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', script)
+        else:
+            script = "Gemini not available. Reading first 500 characters of report. " + report_text[:500]
+            
+        # 2. Convert to Audio
+        tts = gTTS(text=script, lang='en', tld='com')
+        filename = "briefing.mp3"
+        tts.save(filename)
+        return filename
+    except Exception as e:
+        print(f"Error generating audio: {e}")
+        return "error.mp3"
+
+def generate_swot(competitors: list[str]):
+    """
+    Feature 5: Competitor Battlecards
+    Generates a structured SWOT analysis for the given competitors.
+    """
+    if not model or not tavily:
+        return {comp: {"error": "APIs not configured"} for comp in competitors}
+        
+    cards = {}
+    for comp in competitors:
+        try:
+            # Quick search for recent news to make it fresh
+            query = f"{comp} problems lawsuits features growth strategy"
+            results = tavily.search(query=query, topic="news", days=30, max_results=5)
+            
+            # Extract just the content from results
+            news_text = "\n".join([r.get('content', '') for r in results.get('results', [])])[:2000]
+            
+            prompt = f"""
+            Based on general knowledge and the following recent news, generate a structured SWOT analysis for {comp}.
+            
+            Recent News:
+            {news_text}
+            
+            CRITICAL: Return ONLY valid JSON in this exact format, with NO markdown formatting:
+            {{
+                "strengths": ["point 1", "point 2", "point 3"],
+                "weaknesses": ["point 1", "point 2", "point 3"],
+                "opportunities": ["point 1", "point 2", "point 3"],
+                "threats": ["point 1", "point 2", "point 3"]
+            }}
+            
+            Each category should have 3-4 specific, actionable points.
+            """
+            response = model.generate_content(prompt).text.strip()
+            
+            # Clean up potential markdown formatting
+            response = response.replace("```json", "").replace("```", "").strip()
+            
+            # Try to extract JSON if there's extra text
+            import re
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                response = json_match.group(0)
+            
+            cards[comp] = json.loads(response)
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error for {comp}: {e}")
+            print(f"Response was: {response[:200]}")
+            cards[comp] = {"error": f"Failed to parse response: {str(e)}"}
+        except Exception as e:
+            print(f"Error generating SWOT for {comp}: {e}")
+            cards[comp] = {"error": str(e)}
+            
+    return cards
