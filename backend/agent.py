@@ -295,19 +295,23 @@ def run_agent(time_range: str):
             print(f"Error searching {partner}: {e}")
 
     # Pillar B: Competitive Landscape (Broad Sweep)
-    # Search for ALL competitors in chunks to ensure coverage
-    chunk_size = 3
-    for i in range(0, len(competitors), chunk_size):
-        chunk = competitors[i:i + chunk_size]
-        # Create a query for this group
-        # We add "certification" and "AI governance" to catch the specific Behavox news
-        comp_query = f"{' OR '.join(chunk)} acquisition product launch funding compliance certification AI governance"
+    # Search for competitors individually to ensure no news is buried
+    for comp in competitors:
         try:
-            # Fetch results for this chunk
-            comp_results = tavily.search(query=comp_query, topic="news", days=days_back, max_results=5)
-            raw_data.append(f"--- Competitor Group {i//chunk_size + 1} Activity ---\n{comp_results}")
+            # 1. General News Search
+            # We add specific terms like "ISO", "Certification", "AI" to catch the Behavox news
+            # [UPDATED] Broadened to include announcements and partnerships
+            comp_query = f"{comp} compliance certification ISO AI governance product launch announcement partnership"
+            
+            # Use topic="general" for broader coverage (BusinessWire often appears in general search)
+            # Increase max_results to ensure we catch it
+            comp_results = tavily.search(query=comp_query, topic="general", days=days_back, max_results=3)
+            
+            if comp_results and 'results' in comp_results and len(comp_results['results']) > 0:
+                raw_data.append(f"--- {comp} Activity ---\n{comp_results}")
+                
         except Exception as e:
-            print(f"Error fetching Competitor chunk {i}: {e}")
+            print(f"Error fetching Competitor {comp}: {e}")
 
     # Pillar C1: Regulatory Enforcement (Existing - Focused on Fines & AI)
     try:
@@ -365,10 +369,16 @@ def run_agent(time_range: str):
         4. **PRIORITIZE DIVERSITY:** Try to include at least one insight from a non-traditional source (LinkedIn, Blog, Analyst Report) if it is high quality.
         5. **NO DUPLICATES:** Do not list the same news item in multiple sections. Choose the *single best* section for it.
         6. **COMPETITOR ALERT:** Treat "Microsoft Purview" as a COMPETITOR, not a partner, for the purpose of this report.
+        7. **SELF-EXCLUSION:** Do NOT include "Theta Lake" press releases or news in the "Competitive Intelligence" section. Place them in "Cooperative & Partner Updates" if relevant, or omit if minor.
         8. **REGULATORY PRIORITIZATION:**
            - **HIGH PRIORITY:** Communication Compliance (recordkeeping, off-channel comms), AI Governance/Regulation, and Digital Communications Governance (DCGA).
            - **LOW PRIORITY:** General security news (e.g., vulnerabilities, patches, ransomware) UNLESS it has a direct compliance/governance angle.
            - **MANDATORY:** "SEC Division of Examinations 2026 Priorities" must be included.
+        
+        9. **COMPETITOR WEIGHTING:**
+           - **CRITICAL:** Prioritize **ANY significant news** from direct competitors (e.g., Product Launches, Major Partnerships, Certifications, Funding, Acquisitions).
+           - **Certifications** (ISO, SOC2, FedRAMP) and **AI Governance** features are particularly high-threat and MUST be included.
+           - Ensure the "Behavox ISO/IEC 42001 Certification" is included if present in the raw data.
         
         Time Period: {time_range}
         
@@ -400,7 +410,7 @@ def run_agent(time_range: str):
         > **💡 Theta Lake Take:** **[Opportunity/Risk/Threat]** [Strategic Perspective]
         
         ## Competitive Intelligence
-        (Select TOP 5 most threatening or notable competitor moves:)
+        (Select TOP 5-10 most threatening or notable competitor moves. **DO NOT INCLUDE THETA LAKE NEWS HERE.**)
         * **News:** [Summary] ([Source](URL))
         > **💡 Theta Lake Take:** **[Threat/Validation]** [Strategic Perspective]
         
