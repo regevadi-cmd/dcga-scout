@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Download, Compass, Check } from 'lucide-react'
+import { Download, Compass, Check, Mail } from 'lucide-react'
 
 export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} }) {
     // Pre-process the report to convert tags into special links
@@ -63,7 +63,7 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                         fontSize: '0.9rem',
                         cursor: 'pointer'
                     }}
-                    onClick={() => window.open('/api/download_pdf', '_blank')}
+                    onClick={() => window.open('/api/report/pdf', '_blank')}
                 >
                     <Download size={16} />
                     Export PDF
@@ -74,9 +74,9 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                        h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.8rem', borderBottom: '1px solid #334155', paddingBottom: '0.5rem', marginTop: '1.5rem' }} {...props} />,
-                        h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.4rem', color: '#60a5fa', marginTop: '1.5rem', marginBottom: '0.75rem' }} {...props} />,
-                        ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }} {...props} />,
+                        h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.8rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginTop: '1.5rem', color: 'var(--text-primary)' }} {...props} />,
+                        h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.4rem', color: 'var(--accent-primary)', marginTop: '1.5rem', marginBottom: '0.75rem' }} {...props} />,
+                        ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem', color: 'var(--text-primary)' }} {...props} />,
                         li: ({ node, children, ...props }) => {
                             // Extract text content from children for deep dive (recursively)
                             const extractText = (child) => {
@@ -101,65 +101,67 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                             const isDone = deepDiveCache[textContent] !== undefined
 
                             return (
-                                <li style={{ marginBottom: '0.5rem', lineHeight: '1.6', display: 'flex', alignItems: 'flex-start', gap: '8px', position: 'relative' }} {...props}>
+                                <li style={{ marginBottom: '0.5rem', lineHeight: '1.6', display: 'flex', alignItems: 'flex-start', gap: '8px', position: 'relative', color: 'var(--text-primary)' }} {...props}>
                                     <span style={{ flex: 1 }}>{children}</span>
                                     {onDeepDive && textContent && (
-                                        <button
-                                            onClick={() => onDeepDive(textContent)}
-                                            className="deep-dive-btn"
-                                            style={{
-                                                background: isDone
-                                                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                                                    : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                                                border: 'none',
-                                                color: 'white',
-                                                cursor: 'pointer',
-                                                padding: '4px 8px',
-                                                borderRadius: '6px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '4px',
-                                                fontSize: '0.75rem',
-                                                fontWeight: 600,
-                                                flexShrink: 0,
-                                                boxShadow: isDone
-                                                    ? '0 2px 8px rgba(16, 185, 129, 0.3)'
-                                                    : '0 2px 8px rgba(59, 130, 246, 0.3)',
-                                                transition: 'all 0.2s',
-                                                transform: 'scale(1)'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = 'scale(1.05)'
-                                                e.currentTarget.style.boxShadow = isDone
-                                                    ? '0 4px 12px rgba(16, 185, 129, 0.5)'
-                                                    : '0 4px 12px rgba(59, 130, 246, 0.5)'
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = 'scale(1)'
-                                                e.currentTarget.style.boxShadow = isDone
-                                                    ? '0 2px 8px rgba(16, 185, 129, 0.3)'
-                                                    : '0 2px 8px rgba(59, 130, 246, 0.3)'
-                                            }}
-                                            title={isDone ? "View cached deep dive" : "Deep Dive into this topic"}
-                                        >
-                                            {isDone ? <Check size={12} /> : <Compass size={12} />}
-                                            <span style={{ fontSize: '0.7rem' }}>{isDone ? 'Done' : 'Dive'}</span>
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                                            <button
+                                                onClick={() => onDeepDive(textContent)}
+                                                className="deep-dive-btn"
+                                                style={{
+                                                    background: isDone
+                                                        ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                                                        : 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                                                    border: 'none',
+                                                    color: 'white',
+                                                    cursor: 'pointer',
+                                                    padding: '4px 8px',
+                                                    borderRadius: '6px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600,
+                                                    boxShadow: isDone
+                                                        ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                                        : '0 2px 8px rgba(59, 130, 246, 0.3)',
+                                                    transition: 'all 0.2s',
+                                                    transform: 'scale(1)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1.05)'
+                                                    e.currentTarget.style.boxShadow = isDone
+                                                        ? '0 4px 12px rgba(16, 185, 129, 0.5)'
+                                                        : '0 4px 12px rgba(59, 130, 246, 0.5)'
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.transform = 'scale(1)'
+                                                    e.currentTarget.style.boxShadow = isDone
+                                                        ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                                                        : '0 2px 8px rgba(59, 130, 246, 0.3)'
+                                                }}
+                                                title={isDone ? "View cached deep dive" : "Deep Dive into this topic"}
+                                            >
+                                                {isDone ? <Check size={12} /> : <Compass size={12} />}
+                                                <span style={{ fontSize: '0.7rem' }}>{isDone ? 'Done' : 'Dive'}</span>
+                                            </button>
+                                        </div>
                                     )}
                                 </li>
                             )
                         },
-                        p: ({ node, ...props }) => <p style={{ lineHeight: '1.6', marginBottom: '1rem' }} {...props} />,
-                        strong: ({ node, ...props }) => <strong style={{ color: '#f8fafc', fontWeight: 600 }} {...props} />,
+                        p: ({ node, ...props }) => <p style={{ lineHeight: '1.6', marginBottom: '1rem', color: 'var(--text-primary)' }} {...props} />,
+                        strong: ({ node, ...props }) => <strong style={{ color: 'var(--text-primary)', fontWeight: 700 }} {...props} />,
 
                         // Custom Link Renderer for Badges
                         a: ({ node, href, children, ...props }) => {
                             if (href && href.startsWith('badge:')) {
-                                const tagName = decodeURIComponent(href.replace('badge:', ''))
-                                let bg = '#3b82f6' // Default Blue
-                                if (tagName.match(/Risk|Threat/i)) bg = '#ef4444' // Red
-                                if (tagName.match(/Opportunity/i)) bg = '#10b981' // Green
-                                if (tagName.match(/Validation/i)) bg = '#8b5cf6' // Violet
+                                const type = decodeURIComponent(href.replace('badge:', ''))
+                                let bg = '#64748b' // Default Slate
+                                if (type.includes('Sales')) bg = '#8b5cf6' // Violet
+                                if (type.includes('Opportunity')) bg = '#10b981' // Emerald
+                                if (type.includes('Risk')) bg = '#f59e0b' // Amber
+                                if (type.includes('Threat')) bg = '#ef4444' // Red
 
                                 return (
                                     <span style={{
@@ -180,7 +182,7 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                                     </span>
                                 )
                             }
-                            return <a href={href} style={{ color: '#3b82f6', textDecoration: 'none' }} {...props}>{children}</a>
+                            return <a href={href} style={{ color: 'var(--accent-primary)', textDecoration: 'none' }} {...props}>{children}</a>
                         },
 
                         blockquote: ({ node, ...props }) => (
@@ -191,7 +193,8 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                                     margin: '1rem 0 1.5rem 1rem',
                                     padding: '1rem',
                                     borderRadius: '0 0.5rem 0.5rem 0',
-                                    color: '#e2e8f0'
+                                    color: 'var(--text-secondary)',
+                                    fontStyle: 'italic'
                                 }}
                                 {...props}
                             />

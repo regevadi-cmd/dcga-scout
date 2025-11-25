@@ -61,9 +61,9 @@ async def battlecards(request: BattlecardRequest):
 
 @app.get("/api/report/pdf")
 async def get_report_pdf():
-    file_path = "dcga_report.pdf"
+    file_path = "dcga_report_v2.pdf"
     if os.path.exists(file_path):
-        return FileResponse(file_path, media_type="application/pdf", filename="dcga_report.pdf")
+        return FileResponse(file_path, media_type="application/pdf", filename="dcga_report_v2.pdf")
     return {"error": "Report not found"}
 
 @app.get("/health")

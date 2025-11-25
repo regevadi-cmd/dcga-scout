@@ -3,7 +3,7 @@ import ConfigPanel from './components/ConfigPanel'
 import ReportViewer from './components/ReportViewer'
 import ScanningAnimation from './components/ScanningAnimation'
 import DeepDiveModal from './components/DeepDiveModal'
-import { ShieldAlert, Search, FileText, Volume2 } from 'lucide-react'
+import { ShieldAlert, X, Volume2, FileText } from 'lucide-react'
 
 function App() {
     const [loading, setLoading] = useState(false)
@@ -12,6 +12,7 @@ function App() {
     const [deepDiveCache, setDeepDiveCache] = useState({}) // Cache deep dive results
     const [audioUrl, setAudioUrl] = useState(null)
     const [audioLoading, setAudioLoading] = useState(false)
+    const [showAbout, setShowAbout] = useState(false)
     const audioRef = useRef(null)
 
     const handleRunScout = async (config) => {
@@ -82,11 +83,100 @@ function App() {
                         <ShieldAlert size={32} color="white" />
                     </div>
                     <div>
-                        <h1 style={{ fontSize: '1.8rem', letterSpacing: '-0.025em', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>DCGA Scout</h1>
+                        <h1 style={{ fontSize: '1.8rem', letterSpacing: '-0.025em', background: 'linear-gradient(to right, #0f172a, #475569)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>DCGA Scout</h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.1rem' }}>Market Intelligence & Sales Enablement</p>
                     </div>
                 </div>
+
+                <button
+                    onClick={() => setShowAbout(true)}
+                    style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '0.5rem',
+                        border: '1px solid var(--border-color)',
+                        background: 'white',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        fontWeight: 500
+                    }}
+                >
+                    About
+                </button>
             </header>
+
+            {/* About Modal */}
+            {showAbout && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+                    backdropFilter: 'blur(4px)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '1rem'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '1rem',
+                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        maxWidth: '28rem',
+                        width: '100%',
+                        padding: '1.5rem',
+                        border: '1px solid #e2e8f0'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{ padding: '0.5rem', backgroundColor: '#e0e7ff', borderRadius: '0.5rem' }}>
+                                    <ShieldAlert size={24} color="#4f46e5" />
+                                </div>
+                                <div>
+                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#0f172a', margin: 0 }}>DCGA Scout</h2>
+                                    <p style={{ fontSize: '0.875rem', color: '#64748b', margin: 0 }}>Market Intelligence Agent</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowAbout(false)}
+                                style={{ padding: '0.25rem', cursor: 'pointer', background: 'none', border: 'none', color: '#94a3b8' }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #f1f5f9' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                                    <span style={{ color: '#64748b' }}>Version</span>
+                                    <span style={{ fontWeight: 500, color: '#0f172a' }}>2.1.0</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                                    <span style={{ color: '#64748b' }}>Build Date</span>
+                                    <span style={{ fontWeight: 500, color: '#0f172a' }}>{new Date().toLocaleDateString()}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                                    <span style={{ color: '#64748b' }}>Build</span>
+                                    <span style={{ fontWeight: 500, color: '#0f172a', fontFamily: 'monospace' }}>2025.11.25.01</span>
+                                </div>
+                            </div>
+
+                            <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: '1.5' }}>
+                                DCGA Scout is an advanced AI agent designed to track market shifts, competitor moves, and regulatory changes in the Digital Communications Governance & Archiving space.
+                            </p>
+
+                            <div style={{ paddingTop: '1rem', borderTop: '1px solid #f1f5f9', textAlign: 'center' }}>
+                                <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>
+                                    © {new Date().getFullYear()} Theta Lake. Confidential & Proprietary.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div style={{ marginBottom: '2rem' }}>
                 <ConfigPanel onRun={handleRunScout} loading={loading} />
@@ -96,57 +186,70 @@ function App() {
             {report && (
                 <div style={{
                     display: 'flex',
-                    gap: '1rem',
-                    marginBottom: '2rem',
-                    justifyContent: 'flex-end',
                     alignItems: 'center',
-                    flexWrap: 'wrap'
+                    justifyContent: 'space-between',
+                    background: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.75rem',
+                    border: '1px solid var(--border-color)',
+                    marginBottom: '1.5rem',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                 }}>
-                    {/* Audio Section - Button + Player */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <button
                             onClick={handleGenerateAudio}
                             disabled={audioLoading || audioUrl}
                             style={{
-                                background: audioUrl ? '#10b981' : (audioLoading ? '#9ca3af' : 'var(--accent-secondary)'),
-                                color: 'white',
-                                border: 'none',
-                                padding: '0.5rem 1rem',
-                                borderRadius: '0.5rem',
-                                cursor: (audioLoading || audioUrl) ? 'not-allowed' : 'pointer',
-                                fontWeight: 600,
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.5rem',
-                                transition: 'all 0.2s',
-                                opacity: audioUrl ? 0.9 : 1
+                                padding: '0.5rem 1rem',
+                                borderRadius: '0.5rem',
+                                border: '1px solid ' + (audioUrl ? '#86efac' : '#e2e8f0'),
+                                background: audioUrl ? '#f0fdf4' : 'white',
+                                color: audioUrl ? '#15803d' : '#475569',
+                                cursor: (audioLoading || audioUrl) ? 'default' : 'pointer',
+                                fontWeight: 500,
+                                transition: 'all 0.2s'
                             }}
                         >
-                            <Volume2 size={18} />
-                            {audioLoading ? '⏳ Generating...' : (audioUrl ? '✅ Audio Ready' : '🎧 Generate Audio Briefing')}
+                            {audioLoading ? (
+                                <>
+                                    <div className="spinner" style={{ width: 16, height: 16, border: '2px solid currentColor', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                    Generating...
+                                </>
+                            ) : audioUrl ? (
+                                <>
+                                    <div style={{ width: 8, height: 8, background: '#22c55e', borderRadius: '50%' }} />
+                                    Audio Ready
+                                </>
+                            ) : (
+                                <>
+                                    <Volume2 size={18} />
+                                    Audio Briefing
+                                </>
+                            )}
                         </button>
 
-                        {/* Inline Audio Player */}
                         {audioUrl && (
-                            <audio
-                                ref={audioRef}
-                                controls
-                                src={audioUrl}
-                                onLoadedMetadata={() => {
-                                    if (audioRef.current) {
-                                        audioRef.current.playbackRate = 1.25
-                                    }
-                                }}
-                                style={{
-                                    height: '40px',
-                                    borderRadius: '8px'
-                                }}
-                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', animation: 'fadeIn 0.5s ease-out' }}>
+                                <audio
+                                    ref={audioRef}
+                                    controls
+                                    src={audioUrl}
+                                    onLoadedMetadata={(e) => {
+                                        e.currentTarget.playbackRate = 1.25
+                                    }}
+                                    style={{ height: 32, width: 240 }}
+                                />
+                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                    Generated by Google TTS
+                                </span>
+                            </div>
                         )}
                     </div>
                 </div>
             )}
-
 
             <main className="report-section" style={{ maxWidth: '900px', margin: '0 auto' }}>
                 {loading ? (
@@ -185,13 +288,13 @@ function App() {
                 )}
             </main>
 
-            {/* Deep Dive Modal */}
+            {/* Modals */}
             {deepDiveTopic && (
                 <DeepDiveModal
                     initialTopic={deepDiveTopic}
-                    cachedData={deepDiveCache[deepDiveTopic]}
-                    onSaveCache={handleSaveDeepDive}
                     onClose={() => setDeepDiveTopic(null)}
+                    cachedData={deepDiveCache[deepDiveTopic]}
+                    onSaveCache={(data) => handleSaveDeepDive(deepDiveTopic, data)}
                 />
             )}
         </div>

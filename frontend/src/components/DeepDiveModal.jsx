@@ -211,24 +211,39 @@ export default function DeepDiveModal({ onClose, initialTopic = '', cachedData =
                                 padding: '20px',
                                 borderRadius: '8px',
                                 border: '1px solid var(--border-color)',
-                                lineHeight: '1.6',
-                                color: 'var(--text-primary)'
+                                lineHeight: '1.7',
+                                color: 'var(--text-primary)',
+                                fontSize: '0.95rem'
                             }}>
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
-                                        h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.5rem', marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
-                                        h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.25rem', color: '#60a5fa', marginTop: '1rem', marginBottom: '0.5rem' }} {...props} />,
-                                        h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.1rem', marginTop: '0.75rem', marginBottom: '0.5rem' }} {...props} />,
-                                        ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '0.75rem' }} {...props} />,
-                                        ol: ({ node, ...props }) => <ol style={{ paddingLeft: '1.5rem', marginBottom: '0.75rem' }} {...props} />,
-                                        li: ({ node, ...props }) => <li style={{ marginBottom: '0.25rem' }} {...props} />,
-                                        p: ({ node, ...props }) => <p style={{ marginBottom: '0.75rem' }} {...props} />,
-                                        strong: ({ node, ...props }) => <strong style={{ color: '#f8fafc', fontWeight: 600 }} {...props} />,
-                                        a: ({ node, ...props }) => <a style={{ color: '#3b82f6', textDecoration: 'underline' }} {...props} />,
+                                        h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.5rem', marginTop: '1.5rem', marginBottom: '0.75rem', fontWeight: 700, color: '#1e293b' }} {...props} />,
+                                        h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.25rem', color: '#2563eb', marginTop: '1.5rem', marginBottom: '0.75rem', fontWeight: 600 }} {...props} />,
+                                        h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.1rem', marginTop: '1rem', marginBottom: '0.5rem', fontWeight: 600, color: '#334155' }} {...props} />,
+                                        ul: ({ node, ...props }) => <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem', listStyleType: 'disc' }} {...props} />,
+                                        ol: ({ node, ...props }) => <ol style={{ paddingLeft: '1.5rem', marginBottom: '1rem', listStyleType: 'decimal' }} {...props} />,
+                                        li: ({ node, ...props }) => <li style={{ marginBottom: '0.5rem', paddingLeft: '0.25rem' }} {...props} />,
+                                        p: ({ node, ...props }) => <p style={{ marginBottom: '1rem' }} {...props} />,
+                                        strong: ({ node, ...props }) => <strong style={{ color: '#0f172a', fontWeight: 600 }} {...props} />,
+                                        a: ({ node, ...props }) => <a style={{ color: '#2563eb', textDecoration: 'underline', textUnderlineOffset: '2px' }} {...props} />,
                                         code: ({ node, inline, ...props }) => inline
-                                            ? <code style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.9em' }} {...props} />
-                                            : <code style={{ display: 'block', background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '6px', overflowX: 'auto', fontSize: '0.9em' }} {...props} />
+                                            ? <code style={{ background: '#f1f5f9', color: '#0f172a', padding: '2px 6px', borderRadius: '4px', fontSize: '0.9em', fontFamily: 'monospace' }} {...props} />
+                                            : <code style={{ display: 'block', background: '#f8fafc', color: '#334155', padding: '16px', borderRadius: '8px', overflowX: 'auto', fontSize: '0.9em', border: '1px solid #e2e8f0', fontFamily: 'monospace', margin: '1rem 0' }} {...props} />,
+                                        blockquote: ({ node, ...props }) => (
+                                            <blockquote
+                                                style={{
+                                                    borderLeft: '4px solid #cbd5e1',
+                                                    paddingLeft: '1rem',
+                                                    marginLeft: 0,
+                                                    marginRight: 0,
+                                                    marginBottom: '1rem',
+                                                    color: '#64748b',
+                                                    fontStyle: 'italic'
+                                                }}
+                                                {...props}
+                                            />
+                                        )
                                     }}
                                 >
                                     {result}

@@ -30,6 +30,7 @@ export default function ConfigPanel({ onRun, loading }) {
                         minWidth: '200px'
                     }}
                 >
+                    <option value="24h">Last 24 Hours (Real-time)</option>
                     <option value="7d">Last 7 Days (Tactical)</option>
                     <option value="14d">Last 2 Weeks</option>
                     <option value="30d">Last Month (Strategic)</option>
