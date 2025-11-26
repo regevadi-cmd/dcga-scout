@@ -29,7 +29,8 @@ function App() {
                 useMockData,
                 searchMode
             }
-            const API_BASE = import.meta.env.VITE_API_URL || '/api'
+            const BACKEND_URL = import.meta.env.VITE_API_URL || ''
+            const API_BASE = `${BACKEND_URL}/api`
             const response = await fetch(`${API_BASE}/run`, {
                 method: 'POST',
                 headers: {
@@ -53,7 +54,8 @@ function App() {
         setAudioUrl(null)
         try {
             console.log('Generating audio...')
-            const API_BASE = import.meta.env.VITE_API_URL || '/api'
+            const BACKEND_URL = import.meta.env.VITE_API_URL || ''
+            const API_BASE = `${BACKEND_URL}/api`
             const response = await fetch(`${API_BASE}/audio`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
