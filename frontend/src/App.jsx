@@ -19,8 +19,11 @@ function App() {
     const [searchMode, setSearchMode] = useState('deep')
     const audioRef = useRef(null)
 
+    const [error, setError] = useState(null)
+
     const handleRunScout = async (config) => {
         setLoading(true)
+        setError(null)
         setReport(null)
         try {
             const fullConfig = {
@@ -38,11 +41,22 @@ function App() {
                 },
                 body: JSON.stringify(fullConfig),
             })
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`)
+            }
+
             const data = await response.json()
+
+            // Check if the backend returned an error string as the report
+            if (data.report && (data.report.startsWith("Error:") || data.report.includes("Error generating report"))) {
+                throw new Error(data.report)
+            }
+
             setReport(data.report)
-        } catch (error) {
-            console.error("Failed to run scout:", error)
-            alert("Failed to generate report. Please check that the backend is running.")
+        } catch (err) {
+            console.error("Failed to run scout:", err)
+            setError(err.message || "Failed to connect to backend")
         } finally {
             setLoading(false)
         }
@@ -287,9 +301,9 @@ function App() {
             )}
 
             <main className="report-section" style={{ maxWidth: '900px', margin: '0 auto' }}>
-                {loading ? (
+                {(loading || error) ? (
                     <div className="card">
-                        <ScanningAnimation searchProvider={searchProvider} />
+                        <ScanningAnimation searchProvider={searchProvider} error={error} />
                     </div>
                 ) : report ? (
                     <ReportViewer
