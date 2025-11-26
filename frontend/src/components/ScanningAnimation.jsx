@@ -1,7 +1,9 @@
-import React from 'react'
-import { Search, Radar, Zap } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Search, Radar, Zap, CheckCircle2, Loader2 } from 'lucide-react'
 
 export default function ScanningAnimation({ searchProvider = 'tavily' }) {
+    const [progressStep, setProgressStep] = useState(0)
+
     const providerNames = {
         tavily: 'Tavily Search',
         perplexity: 'Perplexity AI',
@@ -9,6 +11,35 @@ export default function ScanningAnimation({ searchProvider = 'tavily' }) {
         exa: 'Exa.ai',
         you: 'You.com'
     }
+
+    const providerName = providerNames[searchProvider] || 'Search Engine'
+
+    const steps = [
+        { message: "Initializing Agent...", duration: 800 },
+        { message: `Connecting to ${providerName}...`, duration: 1500 },
+        { message: "Connection Established", duration: 1000, success: true },
+        { message: "Gathering Intelligence...", duration: 2000 },
+        { message: "Analyzing Market Data...", duration: 2000 },
+        { message: "Synthesizing Report...", duration: 3000 } // Stays here until done
+    ]
+
+    useEffect(() => {
+        let currentStep = 0
+
+        const runStep = () => {
+            if (currentStep >= steps.length - 1) return
+
+            setTimeout(() => {
+                currentStep++
+                setProgressStep(currentStep)
+                runStep()
+            }, steps[currentStep].duration)
+        }
+
+        runStep()
+    }, [searchProvider])
+
+    const currentStepData = steps[progressStep]
 
     return (
         <div style={{
@@ -102,25 +133,48 @@ export default function ScanningAnimation({ searchProvider = 'tavily' }) {
             </div>
 
             {/* Status text */}
-            <div style={{ textAlign: 'center' }}>
+            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
                 <h3 style={{
                     fontSize: '1.25rem',
                     fontWeight: 600,
                     color: 'var(--text-primary)',
-                    marginBottom: '0.5rem',
+                    margin: 0,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
                     justifyContent: 'center'
                 }}>
-                    <Search size={20} className="spin" style={{ color: '#3b82f6' }} />
-                    Intelligence Scan in Progress
+                    {currentStepData.success ? (
+                        <CheckCircle2 size={24} style={{ color: '#10b981' }} />
+                    ) : (
+                        <Loader2 size={20} className="spin" style={{ color: '#3b82f6' }} />
+                    )}
+                    {currentStepData.message}
                 </h3>
+
+                {/* Progress Bar */}
+                <div style={{
+                    width: '200px',
+                    height: '4px',
+                    background: '#e2e8f0',
+                    borderRadius: '2px',
+                    marginTop: '0.5rem',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{
+                        height: '100%',
+                        background: '#3b82f6',
+                        width: `${((progressStep + 1) / steps.length) * 100}%`,
+                        transition: 'width 0.5s ease-out'
+                    }} />
+                </div>
+
                 <p style={{
                     color: 'var(--text-secondary)',
                     fontSize: '0.95rem',
                     maxWidth: '400px',
-                    lineHeight: '1.5'
+                    lineHeight: '1.5',
+                    marginTop: '0.5rem'
                 }}>
                     Analyzing market intelligence, competitor movements, and regulatory updates...
                 </p>
@@ -129,14 +183,14 @@ export default function ScanningAnimation({ searchProvider = 'tavily' }) {
                 <div style={{
                     display: 'flex',
                     gap: '1rem',
-                    marginTop: '1.5rem',
+                    marginTop: '1rem',
                     justifyContent: 'center',
                     fontSize: '0.85rem',
                     color: 'var(--text-secondary)'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Zap size={14} style={{ color: '#10b981' }} />
-                        {providerNames[searchProvider] || 'Search Engine'}
+                        <Zap size={14} style={{ color: progressStep >= 2 ? '#10b981' : '#94a3b8' }} />
+                        {providerName}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Zap size={14} style={{ color: '#3b82f6' }} />

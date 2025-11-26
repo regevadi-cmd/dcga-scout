@@ -29,7 +29,8 @@ function App() {
                 useMockData,
                 searchMode
             }
-            const response = await fetch('/api/run', {
+            const API_BASE = import.meta.env.VITE_API_URL || '/api'
+            const response = await fetch(`${API_BASE}/run`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -52,7 +53,8 @@ function App() {
         setAudioUrl(null)
         try {
             console.log('Generating audio...')
-            const response = await fetch('/api/audio', {
+            const API_BASE = import.meta.env.VITE_API_URL || '/api'
+            const response = await fetch(`${API_BASE}/audio`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ report_text: report })
