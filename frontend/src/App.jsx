@@ -81,7 +81,7 @@ function App() {
 
     return (
         <div className="container">
-            <header style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <header className="header-container">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <div style={{
                         background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
@@ -100,16 +100,7 @@ function App() {
 
                 <button
                     onClick={() => setShowAbout(true)}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '0.5rem',
-                        border: '1px solid var(--border-color)',
-                        background: 'white',
-                        color: 'var(--text-secondary)',
-                        cursor: 'pointer',
-                        fontSize: '0.9rem',
-                        fontWeight: 500
-                    }}
+                    className="about-button"
                 >
                     About
                 </button>

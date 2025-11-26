@@ -25,7 +25,7 @@ export default function ScanningAnimation({ searchProvider = 'tavily' }) {
                 width: '200px',
                 height: '200px',
                 marginBottom: '2rem'
-            }}>
+            }} className="radar-container">
                 {/* Outer pulse rings */}
                 <div style={{
                     position: 'absolute',
