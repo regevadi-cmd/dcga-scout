@@ -3,7 +3,7 @@ import { Search, X, Loader2, Send, MessageCircle } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
-export default function DeepDiveModal({ onClose, initialTopic = '', cachedData = null, onSaveCache }) {
+export default function DeepDiveModal({ onClose, initialTopic = '', cachedData = null, onSaveCache, searchProvider = 'tavily' }) {
     const [topic, setTopic] = useState(initialTopic)
     const [result, setResult] = useState(cachedData?.result || null)
     const [loading, setLoading] = useState(false)
@@ -29,7 +29,10 @@ export default function DeepDiveModal({ onClose, initialTopic = '', cachedData =
             const response = await fetch('/api/deep_dive', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ topic: topic.trim() })
+                body: JSON.stringify({
+                    topic: topic.trim(),
+                    searchProvider: searchProvider
+                })
             })
 
             if (!response.ok) {

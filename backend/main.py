@@ -7,6 +7,9 @@ app = FastAPI()
 
 class ScoutConfig(BaseModel):
     timeRange: str
+    searchProvider: str = "tavily"
+    useMockData: bool = False
+    searchMode: str = "deep" # "fast" or "deep"
 
 class ChatRequest(BaseModel):
     report_context: str
@@ -18,6 +21,7 @@ class EmailRequest(BaseModel):
 
 class DeepDiveRequest(BaseModel):
     topic: str
+    searchProvider: str = "tavily"
 
 class AudioRequest(BaseModel):
     report_text: str
@@ -31,7 +35,7 @@ import os
 
 @app.post("/api/run")
 async def run_scout(config: ScoutConfig):
-    report_text = run_agent(config.timeRange)
+    report_text = run_agent(config.timeRange, config.searchProvider, config.useMockData, config.searchMode)
     return {"report": report_text, "pdf_url": "/api/report/pdf"}
 
 @app.post("/api/chat")
@@ -46,7 +50,7 @@ async def draft_email(request: EmailRequest):
 
 @app.post("/api/deep_dive")
 async def deep_dive(request: DeepDiveRequest):
-    summary = deep_dive_search(request.topic)
+    summary = deep_dive_search(request.topic, request.searchProvider)
     return {"summary": summary}
 
 @app.post("/api/audio")

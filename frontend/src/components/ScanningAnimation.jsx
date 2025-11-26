@@ -1,7 +1,15 @@
 import React from 'react'
 import { Search, Radar, Zap } from 'lucide-react'
 
-export default function ScanningAnimation() {
+export default function ScanningAnimation({ searchProvider = 'tavily' }) {
+    const providerNames = {
+        tavily: 'Tavily Search',
+        perplexity: 'Perplexity AI',
+        websearch: 'WebSearchAPI',
+        exa: 'Exa.ai',
+        you: 'You.com'
+    }
+
     return (
         <div style={{
             display: 'flex',
@@ -128,7 +136,7 @@ export default function ScanningAnimation() {
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Zap size={14} style={{ color: '#10b981' }} />
-                        Tavily Search
+                        {providerNames[searchProvider] || 'Search Engine'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Zap size={14} style={{ color: '#3b82f6' }} />

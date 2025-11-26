@@ -8,3 +8,4 @@ markdown
 reportlab
 gTTS
 beautifulsoup4
+requests

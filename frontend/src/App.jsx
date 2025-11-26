@@ -4,6 +4,7 @@ import ReportViewer from './components/ReportViewer'
 import ScanningAnimation from './components/ScanningAnimation'
 import DeepDiveModal from './components/DeepDiveModal'
 import { ShieldAlert, X, Volume2, FileText } from 'lucide-react'
+import versionData from './version.json'
 
 function App() {
     const [loading, setLoading] = useState(false)
@@ -13,18 +14,27 @@ function App() {
     const [audioUrl, setAudioUrl] = useState(null)
     const [audioLoading, setAudioLoading] = useState(false)
     const [showAbout, setShowAbout] = useState(false)
+    const [searchProvider, setSearchProvider] = useState('tavily')
+    const [useMockData, setUseMockData] = useState(false)
+    const [searchMode, setSearchMode] = useState('deep')
     const audioRef = useRef(null)
 
     const handleRunScout = async (config) => {
         setLoading(true)
         setReport(null)
         try {
+            const fullConfig = {
+                ...config,
+                searchProvider,
+                useMockData,
+                searchMode
+            }
             const response = await fetch('/api/run', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(config),
+                body: JSON.stringify(fullConfig),
             })
             const data = await response.json()
             setReport(data.report)
@@ -152,15 +162,45 @@ function App() {
                             <div style={{ padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '0.5rem', border: '1px solid #f1f5f9' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
                                     <span style={{ color: '#64748b' }}>Version</span>
-                                    <span style={{ fontWeight: 500, color: '#0f172a' }}>2.1.0</span>
+                                    <span style={{ fontWeight: 500, color: '#0f172a' }}>{versionData.version} (Build {versionData.buildNumber})</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
                                     <span style={{ color: '#64748b' }}>Build Date</span>
-                                    <span style={{ fontWeight: 500, color: '#0f172a' }}>{new Date().toLocaleDateString()}</span>
+                                    <span style={{ fontWeight: 500, color: '#0f172a' }}>{versionData.buildDate}</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                                    <span style={{ color: '#64748b' }}>Build</span>
-                                    <span style={{ fontWeight: 500, color: '#0f172a', fontFamily: 'monospace' }}>2025.11.25.01</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginTop: '0.5rem', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
+                                    <span style={{ color: '#64748b' }}>Search Engine</span>
+                                    <select
+                                        value={searchProvider}
+                                        onChange={(e) => setSearchProvider(e.target.value)}
+                                        style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #cbd5e1', fontSize: '0.875rem' }}
+                                    >
+                                        <option value="tavily">Tavily (Default)</option>
+                                        <option value="perplexity">Perplexity AI</option>
+                                        <option value="websearch">WebSearchAPI.ai</option>
+                                        <option value="exa">Exa.ai</option>
+                                        <option value="you">You.com</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginTop: '0.5rem', alignItems: 'center' }}>
+                                    <span style={{ color: '#64748b' }}>Search Mode</span>
+                                    <select
+                                        value={searchMode}
+                                        onChange={(e) => setSearchMode(e.target.value)}
+                                        style={{ padding: '0.25rem', borderRadius: '0.25rem', border: '1px solid #cbd5e1', fontSize: '0.875rem' }}
+                                    >
+                                        <option value="deep">Deep (Standard)</option>
+                                        <option value="fast">Fast (Cheaper)</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginTop: '0.5rem', alignItems: 'center' }}>
+                                    <span style={{ color: '#64748b' }}>Use Mock Data</span>
+                                    <input
+                                        type="checkbox"
+                                        checked={useMockData}
+                                        onChange={(e) => setUseMockData(e.target.checked)}
+                                        style={{ cursor: 'pointer' }}
+                                    />
                                 </div>
                             </div>
 
@@ -254,7 +294,7 @@ function App() {
             <main className="report-section" style={{ maxWidth: '900px', margin: '0 auto' }}>
                 {loading ? (
                     <div className="card">
-                        <ScanningAnimation />
+                        <ScanningAnimation searchProvider={searchProvider} />
                     </div>
                 ) : report ? (
                     <ReportViewer
@@ -295,6 +335,7 @@ function App() {
                     onClose={() => setDeepDiveTopic(null)}
                     cachedData={deepDiveCache[deepDiveTopic]}
                     onSaveCache={(data) => handleSaveDeepDive(deepDiveTopic, data)}
+                    searchProvider={searchProvider}
                 />
             )}
         </div>

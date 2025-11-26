@@ -16,9 +16,16 @@ from xml.sax.saxutils import escape
 
 load_dotenv()
 
+import requests
+
+# Initialize Clients
 # Initialize Clients
 tavily_api_key = os.getenv("TAVILY_API_KEY")
 gemini_api_key = os.getenv("GEMINI_API_KEY")
+perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
+websearch_api_key = os.getenv("WEBSEARCH_API_KEY")
+exa_api_key = os.getenv("EXA_API_KEY")
+you_api_key = os.getenv("YOU_API_KEY")
 
 tavily = TavilyClient(api_key=tavily_api_key) if tavily_api_key else None
 
@@ -28,6 +35,225 @@ if gemini_api_key:
 else:
     model = None
 
+def search_perplexity(query: str, days_back: int = 7, model: str = "sonar-pro"):
+    """
+    Uses Perplexity API (Sonar) to perform a search.
+    """
+    if not perplexity_api_key:
+        return "Error: PERPLEXITY_API_KEY not found."
+
+    url = "https://api.perplexity.ai/chat/completions"
+    
+    # Construct a prompt that asks for recent news
+    time_desc = "last 24 hours" if days_back == 1 else f"last {days_back} days"
+    
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are a helpful research assistant. Find recent news and details."
+            },
+            {
+                "role": "user",
+                "content": f"Search for recent news and updates regarding: {query}. Focus on the {time_desc}. Provide a detailed summary with citations if possible."
+            }
+        ]
+    }
+    
+    headers = {
+        "Authorization": f"Bearer {perplexity_api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data['choices'][0]['message']['content']
+    except Exception as e:
+        return f"Error querying Perplexity: {e}"
+
+def search_websearch_api(query: str, days_back: int = 7, max_results: int = 5):
+    """
+    Uses WebSearchAPI.ai to perform a search.
+    """
+    if not websearch_api_key:
+        return "Error: WEBSEARCH_API_KEY not found."
+
+    url = "https://api.websearchapi.ai/ai-search"
+    
+    headers = {
+        "Authorization": f"Bearer {websearch_api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    # Append time context to query for better relevance in AI Search
+    time_context = "last 24 hours" if days_back == 1 else f"last {days_back} days"
+    refined_query = f"{query} {time_context}"
+    
+    payload = {
+        "query": refined_query,
+        "maxResults": max_results,
+        "includeContent": False # Set to True if we want full content, but False is faster/cheaper
+    }
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Debug logging to understand response structure
+        print(f"DEBUG WebSearchAPI Raw Response: {str(data)[:500]}...")
+        
+        # Format results
+        formatted_results = ""
+        if 'results' in data:
+            for item in data['results']:
+                title = item.get('title', 'No Title')
+                link = item.get('url', '#')
+                snippet = item.get('description', '')
+                formatted_results += f"- **{title}** ({link}): {snippet}\n"
+        
+        return formatted_results if formatted_results else "No results found."
+        
+    except Exception as e:
+        return f"Error querying WebSearchAPI: {e}"
+
+def search_exa(query: str, days_back: int = 7, max_results: int = 5):
+    """
+    Uses Exa.ai to perform a search.
+    """
+    if not exa_api_key:
+        return "Error: EXA_API_KEY not found."
+
+    url = "https://api.exa.ai/search"
+    
+    headers = {
+        "x-api-key": exa_api_key,
+        "Content-Type": "application/json"
+    }
+    
+    # Calculate start date for filtering
+    from datetime import datetime, timedelta
+    start_date = (datetime.now() - timedelta(days=days_back)).isoformat()
+
+    payload = {
+        "query": query,
+        "numResults": max_results,
+        "useAutoprompt": True,
+        "startPublishedDate": start_date,
+        "contents": {"text": True} 
+    }
+    
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+
+        formatted_results = ""
+        if 'results' in data:
+            for item in data['results']:
+                title = item.get('title', 'No Title')
+                link = item.get('url', '#')
+                text = item.get('text', '')[:300] # Truncate text for snippet
+                formatted_results += f"- **{title}** ({link}): {text}...\n"
+
+        return formatted_results if formatted_results else "No results found."
+
+    except Exception as e:
+        return f"Error querying Exa: {e}"
+
+def search_you(query: str, days_back: int = 7, max_results: int = 5):
+    """
+    Uses You.com API (YDC) to perform a search.
+    """
+    if not you_api_key:
+        return "Error: YOU_API_KEY not found."
+
+    url = "https://api.ydc-index.io/search"
+    
+    headers = {
+        "X-API-Key": you_api_key
+    }
+    
+    # You.com doesn't have a direct 'days_back' param in basic search, 
+    # so we append it to the query like we did for WebSearchAPI.
+    # However, for 'news' endpoint it might support 'freshness'.
+    # Let's try appending to query first.
+    
+    time_context = "last 24 hours" if days_back == 1 else f"last {days_back} days"
+    refined_query = f"{query} {time_context}"
+    
+    params = {
+        "query": refined_query,
+        "num_web_results": max_results
+    }
+    
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Debug logging to understand response structure
+        print(f"DEBUG You.com Raw Response: {str(data)[:500]}...")
+        
+        formatted_results = ""
+        # You.com response structure: {'hits': [{'title': ..., 'url': ..., 'snippets': [...]}]}
+        if 'hits' in data:
+            for item in data['hits']:
+                title = item.get('title', 'No Title')
+                link = item.get('url', '#')
+                snippet = " ".join(item.get('snippets', []))[:300]
+                formatted_results += f"- **{title}** ({link}): {snippet}\n"
+        
+        return formatted_results if formatted_results else "No results found."
+
+    except Exception as e:
+        return f"Error querying You.com: {e}"
+
+MOCK_DATA = """
+- **Zoom Updates:** Zoom introduced new AI Companion features for meeting summaries and real-time translation. (https://zoom.us/news)
+- **Microsoft Teams:** Teams added new "Copilot" integration for chat and channels, enhancing productivity. (https://news.microsoft.com)
+- **Cisco Webex:** Webex released a new version with improved noise cancellation and 4K video support. (https://webex.com/blog)
+- **Salesforce:** Salesforce announced "Einstein GPT" for CRM, automating customer interactions. (https://salesforce.com/news)
+- **Slack:** Slack launched a new design for better organization and focus. (https://slack.com/blog)
+"""
+
+def perform_search(query: str, topic: str, days: int, max_results: int, provider: str = "tavily", use_mock_data: bool = False, search_mode: str = "deep"):
+    """
+    Wrapper to switch between Tavily, Perplexity, WebSearchAPI, Exa, and You.com.
+    Also handles Mock Data and Search Mode (Fast vs Deep).
+    """
+    if use_mock_data:
+        print("DEBUG: Using MOCK DATA")
+        return MOCK_DATA
+
+    # Adjust parameters based on search_mode
+    if search_mode == "fast":
+        max_results = 3 # Reduce results for speed/cost
+        # For Tavily, we can use 'basic' depth if supported, but here we just limit results.
+        # Perplexity 'sonar-small-online' is faster/cheaper than 'sonar-pro'.
+    
+    if provider == "perplexity":
+        # Adjust model based on mode
+        model = "sonar-small-online" if search_mode == "fast" else "sonar-pro"
+        return search_perplexity(query, days_back=days, model=model)
+    elif provider == "websearch":
+        return search_websearch_api(query, days_back=days, max_results=max_results)
+    elif provider == "exa":
+        return search_exa(query, days_back=days, max_results=max_results)
+    elif provider == "you":
+        return search_you(query, days_back=days, max_results=max_results)
+    else:
+        # Default to Tavily
+        if not tavily:
+            return "Error: Tavily API key not configured."
+        
+        # Tavily supports 'search_depth'
+        depth = "basic" if search_mode == "fast" else "advanced"
+        return tavily.search(query=query, topic=topic, days=days, max_results=max_results, search_depth=depth)
+
 # --- Discovery Engine (Simulated) ---
 def discover_targets():
     """
@@ -35,24 +261,32 @@ def discover_targets():
     In a real production agent, this would crawl thetalake.com/partners.
     """
     # Seed List (Hardcoded for reliability as per plan)
-    partners = ["Zoom", "Microsoft", "Cisco", "RingCentral", "Slack", "Box", "Salesforce", "Mural", "Miro", "Asana"]
+    partners = [
+        "Zoom", "Microsoft Teams", "Cisco Webex", "RingCentral", "Slack",
+        "Asana", "Monday.com", "Miro", "Mural", "Slido", 
+        "Dialpad", "Verizon", "Vidyard", "Movius", "CellTrust", 
+        "Box", "NICE CXone", "LinkedIn", "1GLOBAL", "Salesforce Chatter", 
+        "ICE Chat", "Kaltura", "Verint", "Symphony", "Facebook", 
+        "Wistia", "Vbrick", "Red Box", "Fuze", "Cloud9", 
+        "LogMeIn", "Blue Jeans", "AT&T Office@Hand", "Avaya", "Reuters", 
+        "Bloomberg", "YouTube", "Vimeo", "BombBomb", "Workvivo", "Relativity"
+    ]
     
     # Specific Competitors/Vendors from User Request
     competitors = [
-        "Theta Lake Compliance and Risk Suite", # Self (for context)
         "Shield Platform",
-        "Smarsh Enterprise Platform",
-        "Arctera Insight Surveillance",
-        "Archive360 Unified Data Governance Platform",
-        "Global Relay Archive",
-        "NICE Compliancentral",
-        "Behavox Intelligent Archive/Quantum",
-        "Mimecast GCI Platform",
-        "Proofpoint Archive",
-        "SteelEye Communications Surveillance Platform",
-        "Microsoft Purview Communication Compliance",
+        "Smarsh",
+        "Arctera",
+        "Archive360",
+        "Global Relay",
+        "NICE",
+        "Behavox",
+        "Mimecast",
+        "Proofpoint",
+        "SteelEye",
+        "Microsoft Purview",
         "Bloomberg Vault",
-        "The LeapXpert Communications Platform"
+        "LeapXpert"
     ]
     
     return partners, competitors
@@ -256,9 +490,17 @@ def generate_pdf(markdown_content, filename="dcga_report.pdf"):
     doc.build(story, onFirstPage=add_header_footer, onLaterPages=add_header_footer)
     return filename
 
-def run_agent(time_range: str):
-    if not tavily:
+def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: bool = False, search_mode: str = "deep"):
+    if search_provider == "tavily" and not tavily:
         return "Error: TAVILY_API_KEY not found in .env"
+    if search_provider == "perplexity" and not perplexity_api_key:
+        return "Error: PERPLEXITY_API_KEY not found in .env"
+    if search_provider == "websearch" and not websearch_api_key:
+        return "Error: WEBSEARCH_API_KEY not found in .env"
+    if search_provider == "exa" and not exa_api_key:
+        return "Error: EXA_API_KEY not found in .env"
+    if search_provider == "you" and not you_api_key:
+        return "Error: YOU_API_KEY not found in .env"
 
     # 1. Discovery Phase
     partners, competitors = discover_targets()
@@ -285,11 +527,12 @@ def run_agent(time_range: str):
     
     # Pillar A: Partner Ecosystem (Deep Dive)
     # Instead of one big query, we search for key partners individually to ensure depth
-    key_partners = ["Zoom", "Microsoft Teams", "Cisco Webex", "Salesforce", "Slack"]
-    for partner in key_partners:
+    # key_partners = ["Zoom", "Microsoft Teams", "Cisco Webex", "Salesforce", "Slack"]
+    # Use the partners list from discover_targets()
+    for partner in partners:
         try:
             query = f"{partner} API developer changelog new features compliance export"
-            results = tavily.search(query=query, topic="news", days=days_back, max_results=5)
+            results = perform_search(query=query, topic="news", days=days_back, max_results=5, provider=search_provider, use_mock_data=use_mock_data, search_mode=search_mode)
             raw_data.append(f"--- {partner} Updates ---\n{results}")
         except Exception as e:
             print(f"Error searching {partner}: {e}")
@@ -300,15 +543,19 @@ def run_agent(time_range: str):
         try:
             # 1. General News Search
             # We add specific terms like "ISO", "Certification", "AI" to catch the Behavox news
-            # [UPDATED] Broadened to include announcements and partnerships
-            comp_query = f"{comp} compliance certification ISO AI governance product launch announcement partnership"
+            # [UPDATED] Broadened to include announcements and partnerships, EXCLUDING fines/enforcement
+            comp_query = f"{comp} product launch new feature partnership announcement AI governance -fine -penalty -settlement"
             
             # Use topic="general" for broader coverage (BusinessWire often appears in general search)
             # Increase max_results to ensure we catch it
-            comp_results = tavily.search(query=comp_query, topic="general", days=days_back, max_results=3)
+            comp_results = perform_search(query=comp_query, topic="general", days=days_back, max_results=3, provider=search_provider)
             
-            if comp_results and 'results' in comp_results and len(comp_results['results']) > 0:
-                raw_data.append(f"--- {comp} Activity ---\n{comp_results}")
+            if comp_results: # Check if results exist (Perplexity returns string, Tavily returns dict)
+                # For Tavily, check 'results' list. For Perplexity, string is truthy.
+                if isinstance(comp_results, dict) and 'results' in comp_results and len(comp_results['results']) == 0:
+                    pass # Empty Tavily results
+                else:
+                    raw_data.append(f"--- {comp} Activity ---\n{comp_results}")
                 
         except Exception as e:
             print(f"Error fetching Competitor {comp}: {e}")
@@ -316,9 +563,10 @@ def run_agent(time_range: str):
     # Pillar C1: Regulatory Enforcement (Existing - Focused on Fines & AI)
     try:
         # Added "AI" and "Generative" to catch new tech regulations
-        reg_query = "SEC FINRA FCA CFTC fines recordkeeping off-channel communications whatsapp enforcement AI artificial intelligence generative"
+        # [UPDATED] Focus on Financial Institutions (Banks, Broker-Dealers) not Vendors
+        reg_query = "SEC FINRA FCA CFTC fine penalty settlement broker-dealer investment adviser recordkeeping off-channel communications AI regulation"
         # Fetch 15 items for enforcement
-        reg_results = tavily.search(query=reg_query, topic="news", days=days_back, max_results=15)
+        reg_results = perform_search(query=reg_query, topic="news", days=days_back, max_results=15, provider=search_provider)
         raw_data.append(f"--- Regulatory Enforcement ---\n{reg_results}")
     except Exception as e:
         raw_data.append(f"Error fetching Regulatory Enforcement: {e}")
@@ -328,7 +576,7 @@ def run_agent(time_range: str):
         # Hyper-targeted query for the specific missing item + general strategy
         strat_query = "SEC Division of Examinations 2026 Priorities press release AI regulation guidance"
         # Use topic="general" to hit sec.gov, finra.org directly
-        strat_results = tavily.search(query=strat_query, topic="general", days=30, max_results=10)
+        strat_results = perform_search(query=strat_query, topic="general", days=30, max_results=10, provider=search_provider)
         raw_data.append(f"--- Regulatory Strategic Announcements ---\n{strat_results}")
     except Exception as e:
         raw_data.append(f"Error fetching Regulatory Strategy: {e}")
@@ -338,7 +586,7 @@ def run_agent(time_range: str):
         # Search for "Pulse" articles and posts to get professional "grounding"
         social_query = f"site:linkedin.com/pulse OR site:linkedin.com/posts ({' OR '.join(competitors[:3])} OR Theta Lake) compliance AI"
         # Use topic="general" because LinkedIn content isn't always indexed as "news"
-        social_results = tavily.search(query=social_query, topic="general", days=30, max_results=10)
+        social_results = perform_search(query=social_query, topic="general", days=30, max_results=10, provider=search_provider)
         raw_data.append(f"--- LinkedIn/Social Discussions ---\n{social_results}")
     except Exception as e:
         raw_data.append(f"Error fetching Social signals: {e}")
@@ -347,7 +595,7 @@ def run_agent(time_range: str):
     try:
         # Broad search for analysis, opinions, and blogs (excluding LinkedIn to avoid dupes)
         blog_query = f"{' OR '.join(competitors[:3])} compliance AI analysis opinion -site:linkedin.com"
-        blog_results = tavily.search(query=blog_query, topic="general", days=30, max_results=10)
+        blog_results = perform_search(query=blog_query, topic="general", days=30, max_results=10, provider=search_provider)
         raw_data.append(f"--- Industry Analysis & Blogs ---\n{blog_results}")
     except Exception as e:
         raw_data.append(f"Error fetching Blogs: {e}")
@@ -374,6 +622,13 @@ def run_agent(time_range: str):
            - **HIGH PRIORITY:** Communication Compliance (recordkeeping, off-channel comms), AI Governance/Regulation, and Digital Communications Governance (DCGA).
            - **LOW PRIORITY:** General security news (e.g., vulnerabilities, patches, ransomware) UNLESS it has a direct compliance/governance angle.
            - **MANDATORY:** "SEC Division of Examinations 2026 Priorities" must be included.
+        
+        10. **MUTUALLY EXCLUSIVE CATEGORIZATION (CRITICAL):**
+           - **Regulatory Radar:** STRICTLY for news driven by **Agencies** (SEC, FINRA, FCA, etc.) targeting **Financial Institutions** (Banks, Broker-Dealers). This includes fines, penalties, settlements, and new rules.
+           - **Competitive Intelligence:** STRICTLY for news driven by **Vendors** (Competitors). This includes product launches, features, partnerships, and funding.
+           - **OVERLAP RULE:** If a Competitor is fined, place this **ONLY in Regulatory Radar**.
+           - **NO DUPLICATES:** A story must appear in ONE section only.
+           - **NOTE:** It is rare for a Vendor to be fined. Focus Regulatory Radar on the *customers* (Banks) getting fined.
         
         9. **COMPETITOR WEIGHTING:**
            - **CRITICAL:** Prioritize **ANY significant news** from direct competitors (e.g., Product Launches, Major Partnerships, Certifications, Funding, Acquisitions).
@@ -496,18 +751,18 @@ def generate_sales_email(insight_text: str, recipient_name: str):
     except Exception as e:
         return f"Error generating email: {e}"
 
-def deep_dive_search(topic: str):
+def deep_dive_search(topic: str, search_provider: str = "tavily"):
     """
     Feature 3: Deep Dive Agent
     Performs a targeted search on a specific topic to get more details.
     """
-    if not tavily:
-        return "Error: Tavily API key not configured."
+    # Check keys based on provider (perform_search handles this, but good to fail fast if needed)
+    # Actually perform_search handles the checks.
         
     try:
         # Search for detailed analysis and news
         query = f"{topic} analysis details implications compliance"
-        results = tavily.search(query=query, topic="general", days=30, max_results=5)
+        results = perform_search(query=query, topic="general", days=30, max_results=5, provider=search_provider)
         
         # Summarize with Gemini
         if model:
