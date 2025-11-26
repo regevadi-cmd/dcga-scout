@@ -11,12 +11,28 @@ export default function DeepDiveModal({ onClose, initialTopic = '', cachedData =
     const [chatInput, setChatInput] = useState('')
     const [chatLoading, setChatLoading] = useState(false)
 
+    const providerNames = {
+        tavily: 'Tavily',
+        perplexity: 'Perplexity AI',
+        websearch: 'WebSearchAPI',
+        exa: 'Exa.ai',
+        you: 'You.com'
+    }
+
     // Auto-run deep dive if initialTopic is provided and no cache
     useEffect(() => {
         if (initialTopic && !cachedData) {
             handleDeepDive()
         }
     }, [initialTopic])
+
+    // Sync state with cachedData when it changes (e.g. re-opening modal)
+    useEffect(() => {
+        if (cachedData) {
+            setResult(cachedData.result)
+            setMessages(cachedData.messages || [])
+        }
+    }, [cachedData])
 
     const handleDeepDive = async () => {
         if (!topic.trim()) return
@@ -302,7 +318,7 @@ export default function DeepDiveModal({ onClose, initialTopic = '', cachedData =
                             padding: '40px 20px'
                         }}>
                             <Search size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-                            <p>Enter a topic above to perform in-depth research using Tavily and Gemini.</p>
+                            <p>Enter a topic above to perform in-depth research using {providerNames[searchProvider] || 'the selected search engine'} and Gemini.</p>
                             <p style={{ fontSize: '0.85rem', marginTop: '8px' }}>
                                 After the research, you can ask follow-up questions to dive deeper.
                             </p>
