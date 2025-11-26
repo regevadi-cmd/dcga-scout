@@ -343,7 +343,7 @@ function App() {
                     initialTopic={deepDiveTopic}
                     onClose={() => setDeepDiveTopic(null)}
                     cachedData={deepDiveCache[deepDiveTopic]}
-                    onSaveCache={(data) => handleSaveDeepDive(deepDiveTopic, data)}
+                    onSaveCache={(topic, data) => handleSaveDeepDive(topic, data)}
                     searchProvider={searchProvider}
                 />
             )}
