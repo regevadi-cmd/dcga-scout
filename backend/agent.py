@@ -727,21 +727,24 @@ def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: b
         - Start with a "TL;DR: The Weekly Pulse" (Executive Summary).
         - Group by: "Cooperative & Partner Updates", "Competitive Landscape", "Regulatory Radar".
         - **MANDATORY:** END EVERY BULLET POINT WITH THE DATE/TIME: ... `[Nov 25, 2025 10:00 AM EST]`
-        - **MANDATORY:** EVERY SINGLE NEWS ITEM MUST HAVE A "THETA LAKE TAKE". NO EXCEPTIONS.
-        - **NO GROUPING:** Do not group multiple news items together. Analyze each one individually.
-        - For each item, provide the news/update first.
+        - **MANDATORY:** EVERY NEWS ITEM (OR GROUP) MUST HAVE A "THETA LAKE TAKE". NO EXCEPTIONS.
+        - **INTELLIGENT GROUPING:** You MAY group similar items together (e.g., multiple new features for Microsoft Teams) into a single bullet point.
+        - If grouped, provide a SINGLE "Theta Lake Take" that covers the entire group.
+        - For each item (or group), provide the news/update first.
         - Then, IMMEDIATELY follow with a "Theta Lake Take" blockquote: `> **Theta Lake Take:** [Badge] Analysis...`
         - Badges must be one of: [Sales Validation], [Opportunity], [Risk], [Threat], [Validation].
         - Cite sources with links: `([Source Name](url))`.
         
-        **ONE-SHOT EXAMPLE (FOLLOW THIS PATTERN EXACTLY):**
+        **ONE-SHOT EXAMPLE (SINGLE ITEM):**
         
         ## Cooperative & Partner Updates
         * **News:** Zoom launched "AI Companion 2.0" with new federation capabilities for external meetings. ([Zoom Blog](https://blog.zoom.us)) [Nov 28, 2025 09:00 AM EST]
         > **💡 Theta Lake Take:** **[Opportunity]** This expansion of AI into external federation creates a massive compliance gap. Legacy archivers cannot see into these ephemeral, cross-tenant AI interactions. This is a prime upsell trigger for our "Unified Capture" to ensure full visibility.
         
-        * **News:** Microsoft Teams introduced "Mesh" for immersive 3D meetings. ([The Verge](https://theverge.com)) [Nov 27, 2025 02:00 PM EST]
-        > **💡 Theta Lake Take:** **[Risk]** 3D avatars and spatial audio present a nightmare for traditional supervision. If a trader nods "yes" in a 3D space, is that captured? Theta Lake's ability to capture and replay the full visual context is the ONLY viable solution here.
+        **ONE-SHOT EXAMPLE (GROUPED ITEMS):**
+
+        * **News:** Microsoft Teams introduced "Mesh" for immersive 3D meetings ([The Verge](https://theverge.com)) AND announced new "Copilot" integration for Whiteboard ([Microsoft News](https://news.microsoft.com)). [Nov 27, 2025 02:00 PM EST]
+        > **💡 Theta Lake Take:** **[Risk]** Both 3D avatars and AI-generated whiteboard content present a nightmare for traditional supervision. Whether a trader nods "yes" in a 3D space or Copilot summarizes a brainstorm, legacy tools miss this context. Theta Lake's ability to capture and replay the full visual context is the ONLY viable solution here.
 
         Format the output EXACTLY as follows (Markdown):
         
