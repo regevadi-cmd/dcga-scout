@@ -74,25 +74,34 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                 if (currentItem) {
                     // If it's an empty line after an item, it might separate items. 
                     // But usually we just keep it with the item if it's part of the block.
-                    // For simplicity, if it's empty, we might ignore or attach.
-                    // Let's attach non-empty lines to current item, or close item if double newline?
-                    // Simple approach: Attach everything else to current item if exists, else section.
                     currentItem.children.push(line)
                 } else if (currentSection) {
-                    currentSection.children.push({
-                        id: `text-${index}`,
-                        type: 'text',
-                        content: line,
-                        checked: true
-                    })
+                    // Check if last child is a text block to coalesce
+                    const lastChild = currentSection.children[currentSection.children.length - 1]
+                    if (lastChild && lastChild.type === 'text') {
+                        lastChild.content += '\n' + line
+                    } else {
+                        currentSection.children.push({
+                            id: `text-${index}`,
+                            type: 'text',
+                            content: line,
+                            checked: true
+                        })
+                    }
                 } else {
                     // Top level text (e.g. intro before first header)
-                    structure.push({
-                        id: `text-${index}`,
-                        type: 'text',
-                        content: line,
-                        checked: true
-                    })
+                    // Check if last block is text
+                    const lastBlock = structure[structure.length - 1]
+                    if (lastBlock && lastBlock.type === 'text') {
+                        lastBlock.content += '\n' + line
+                    } else {
+                        structure.push({
+                            id: `text-${index}`,
+                            type: 'text',
+                            content: line,
+                            checked: true
+                        })
+                    }
                 }
             }
         })
@@ -294,7 +303,7 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
             <div className="markdown-content" style={{ padding: '0 1rem' }}>
                 {reportStructure.map(block => (
                     <div key={block.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        {isSelectionMode && (
+                        {isSelectionMode && block.content.trim().length > 0 && (
                             <input
                                 type="checkbox"
                                 checked={block.checked}
@@ -428,7 +437,7 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                                 <div style={{ marginLeft: '1rem' }}>
                                     {block.children.map(child => (
                                         <div key={child.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                                            {isSelectionMode && (
+                                            {isSelectionMode && child.content.trim().length > 0 && (
                                                 <input
                                                     type="checkbox"
                                                     checked={child.checked}
