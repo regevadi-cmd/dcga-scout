@@ -4,6 +4,58 @@ import remarkGfm from 'remark-gfm'
 import { Download, Compass, Check, Mail } from 'lucide-react'
 
 export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} }) {
+    const [showExportModal, setShowExportModal] = React.useState(false)
+    const [exportLoading, setExportLoading] = React.useState(false)
+    const [selectedSections, setSelectedSections] = React.useState({
+        "Executive Summary": true,
+        "Partner Updates": true,
+        "Competitive Intelligence": true,
+        "Regulatory Radar": true,
+        "Industry Analysis": true
+    })
+
+    const handleExport = async () => {
+        setExportLoading(true)
+        try {
+            const activeSections = Object.keys(selectedSections).filter(k => selectedSections[k])
+            const timestamp = new Date().toLocaleString('en-US', {
+                month: 'long', day: 'numeric', year: 'numeric',
+                hour: 'numeric', minute: 'numeric', hour12: true
+            })
+
+            const BACKEND_URL = import.meta.env.VITE_API_URL || ''
+            const API_BASE = `${BACKEND_URL}/api`
+
+            const response = await fetch(`${API_BASE}/generate_pdf`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    report_text: report,
+                    sections: activeSections,
+                    timestamp: timestamp
+                })
+            })
+
+            if (!response.ok) throw new Error("Failed to generate PDF")
+
+            const blob = await response.blob()
+            const url = window.URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `DCGA_Scout_Report_${new Date().toISOString().split('T')[0]}.pdf`
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+            setShowExportModal(false)
+        } catch (error) {
+            console.error("Export failed:", error)
+            alert("Failed to export PDF")
+        } finally {
+            setExportLoading(false)
+        }
+    }
+
     // Pre-process the report to convert tags into special links
     // This ensures they are parsed correctly regardless of context (bold, blockquote, etc.)
     const processedReport = React.useMemo(() => {
@@ -63,7 +115,7 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                         fontSize: '0.9rem',
                         cursor: 'pointer'
                     }}
-                    onClick={() => window.open('/api/report/pdf', '_blank')}
+                    onClick={() => setShowExportModal(true)}
                 >
                     <Download size={16} />
                     Export PDF
@@ -204,6 +256,64 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                     {processedReport}
                 </ReactMarkdown>
             </div>
-        </div>
+
+            {/* Export Modal */}
+            {
+                showExportModal && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 1000
+                    }}>
+                        <div style={{
+                            background: 'var(--bg-secondary)', padding: '2rem', borderRadius: '1rem',
+                            width: '400px', maxWidth: '90%', border: '1px solid var(--border-color)'
+                        }}>
+                            <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Export Report</h3>
+
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <p style={{ marginBottom: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Select sections to include:</p>
+                                {Object.keys(selectedSections).map(section => (
+                                    <label key={section} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', cursor: 'pointer', color: 'var(--text-primary)' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedSections[section]}
+                                            onChange={(e) => setSelectedSections(prev => ({ ...prev, [section]: e.target.checked }))}
+                                            style={{ accentColor: 'var(--accent-primary)' }}
+                                        />
+                                        {section}
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                                <button
+                                    onClick={() => setShowExportModal(false)}
+                                    style={{
+                                        background: 'transparent', border: '1px solid var(--border-color)',
+                                        color: 'var(--text-secondary)', padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleExport}
+                                    disabled={exportLoading}
+                                    style={{
+                                        background: 'var(--accent-primary)', border: 'none',
+                                        color: 'white', padding: '0.5rem 1rem', borderRadius: '0.5rem',
+                                        cursor: 'pointer', opacity: exportLoading ? 0.7 : 1,
+                                        display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                    }}
+                                >
+                                    {exportLoading ? 'Generating...' : 'Export PDF'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     )
 }

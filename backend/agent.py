@@ -321,11 +321,75 @@ def add_header_footer(canvas, doc):
     canvas.drawRightString(letter[0] - inch, 0.5 * inch, f"Page {page_num}")
     
     canvas.restoreState()
+def filter_markdown_sections(markdown_text, selected_sections):
+    if not selected_sections:
+        return markdown_text
+        
+    filtered_text = ""
+    
+    # Map selection keys to markdown headers
+    # Note: The keys must match what the frontend sends
+    section_map = {
+        "Executive Summary": "# 🚨 TL;DR: The Weekly Pulse",
+        "Partner Updates": "## Cooperative & Partner Updates",
+        "Competitive Intelligence": "## Competitive Intelligence",
+        "Regulatory Radar": "## Regulatory Radar",
+        "Industry Analysis": "## Industry Analysis & Blogs"
+    }
+    
+    # Always try to include the title if it exists (usually implicit in PDF generation)
+    
+    # We will extract sections based on headers.
+    # The headers in the markdown are exactly as defined in the prompt.
+    
+    # 1. Executive Summary (TL;DR)
+    if "Executive Summary" in selected_sections:
+        header = section_map["Executive Summary"]
+        start = markdown_text.find(header)
+        if start != -1:
+            # Find end: next ## or end of string
+            # We look for "\n## " because TLDR is #, next sections are ##
+            end = -1
+            match = re.search(r'\n## ', markdown_text[start + len(header):])
+            if match:
+                end = start + len(header) + match.start()
+            
+            if end != -1:
+                filtered_text += markdown_text[start:end] + "\n\n"
+            else:
+                filtered_text += markdown_text[start:] + "\n\n"
 
-def generate_pdf(markdown_content, filename="dcga_report.pdf"):
+    # 2. Other Sections (## Header)
+    for section in ["Partner Updates", "Competitive Intelligence", "Regulatory Radar", "Industry Analysis"]:
+        if section in selected_sections:
+            header = section_map.get(section)
+            if not header: continue
+            
+            start = markdown_text.find(header)
+            if start != -1:
+                # Find end: next ## or end of string
+                end = -1
+                # Search for next header starting with ## 
+                # (Note: Industry Analysis might be last)
+                match = re.search(r'\n## ', markdown_text[start + len(header):])
+                if match:
+                    end = start + len(header) + match.start()
+                
+                if end != -1:
+                    filtered_text += markdown_text[start:end] + "\n\n"
+                else:
+                    filtered_text += markdown_text[start:] + "\n\n"
+                    
+    return filtered_text
+
+def generate_pdf(markdown_content, filename="dcga_report.pdf", sections=None, timestamp=None):
     """
     Converts Markdown content to a PDF file using ReportLab with professional styling.
     """
+    # Filter content if sections provided
+    if sections:
+        markdown_content = filter_markdown_sections(markdown_content, sections)
+
     doc = SimpleDocTemplate(
         filename, 
         pagesize=letter,
@@ -415,7 +479,9 @@ def generate_pdf(markdown_content, filename="dcga_report.pdf"):
     story.append(Paragraph("DCGA Scout", title_style))
     story.append(Paragraph("Market Intelligence Report", h2_style))
     story.append(Spacer(1, 0.5 * inch))
-    story.append(Paragraph(f"Generated on: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", body_style))
+    
+    display_date = timestamp if timestamp else datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    story.append(Paragraph(f"Generated on: {display_date}", body_style))
     story.append(PageBreak())
 
     def process_text_styling(text):

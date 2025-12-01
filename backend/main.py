@@ -40,7 +40,7 @@ class BattlecardRequest(BaseModel):
     competitors: list[str]
 
 from fastapi.responses import FileResponse
-from agent import run_agent, chat_with_report, generate_sales_email, deep_dive_search, generate_audio_summary, generate_swot
+from agent import run_agent, chat_with_report, generate_sales_email, deep_dive_search, generate_audio_summary, generate_swot, generate_pdf
 import os
 
 @app.post("/api/run")
@@ -72,6 +72,24 @@ async def generate_audio(request: AudioRequest):
 async def battlecards(request: BattlecardRequest):
     cards = generate_swot(request.competitors)
     return {"cards": cards}
+
+class PDFRequest(BaseModel):
+    report_text: str
+    sections: list[str]
+    timestamp: str
+
+@app.post("/api/generate_pdf")
+async def generate_pdf_endpoint(request: PDFRequest):
+    pdf_filename = "dcga_report_custom.pdf"
+    try:
+        # Generate PDF with custom sections and timestamp
+        generate_pdf(request.report_text, pdf_filename, request.sections, request.timestamp)
+        
+        if os.path.exists(pdf_filename):
+            return FileResponse(pdf_filename, media_type="application/pdf", filename="DCGA_Scout_Report.pdf")
+        return {"error": "Failed to generate PDF"}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/api/report/pdf")
 async def get_report_pdf():
