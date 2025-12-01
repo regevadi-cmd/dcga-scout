@@ -728,11 +728,21 @@ def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: b
         - Group by: "Cooperative & Partner Updates", "Competitive Landscape", "Regulatory Radar".
         - **MANDATORY:** END EVERY BULLET POINT WITH THE DATE/TIME: ... `[Nov 25, 2025 10:00 AM EST]`
         - **MANDATORY:** EVERY SINGLE NEWS ITEM MUST HAVE A "THETA LAKE TAKE". NO EXCEPTIONS.
+        - **NO GROUPING:** Do not group multiple news items together. Analyze each one individually.
         - For each item, provide the news/update first.
         - Then, IMMEDIATELY follow with a "Theta Lake Take" blockquote: `> **Theta Lake Take:** [Badge] Analysis...`
         - Badges must be one of: [Sales Validation], [Opportunity], [Risk], [Threat], [Validation].
         - Cite sources with links: `([Source Name](url))`.
         
+        **ONE-SHOT EXAMPLE (FOLLOW THIS PATTERN EXACTLY):**
+        
+        ## Cooperative & Partner Updates
+        * **News:** Zoom launched "AI Companion 2.0" with new federation capabilities for external meetings. ([Zoom Blog](https://blog.zoom.us)) [Nov 28, 2025 09:00 AM EST]
+        > **💡 Theta Lake Take:** **[Opportunity]** This expansion of AI into external federation creates a massive compliance gap. Legacy archivers cannot see into these ephemeral, cross-tenant AI interactions. This is a prime upsell trigger for our "Unified Capture" to ensure full visibility.
+        
+        * **News:** Microsoft Teams introduced "Mesh" for immersive 3D meetings. ([The Verge](https://theverge.com)) [Nov 27, 2025 02:00 PM EST]
+        > **💡 Theta Lake Take:** **[Risk]** 3D avatars and spatial audio present a nightmare for traditional supervision. If a trader nods "yes" in a 3D space, is that captured? Theta Lake's ability to capture and replay the full visual context is the ONLY viable solution here.
+
         Format the output EXACTLY as follows (Markdown):
         
         # 🚨 TL;DR: The Weekly Pulse
