@@ -1,7 +1,7 @@
 {
   "name": "dcga-scout-frontend",
   "private": true,
-  "version": "2.2.0",
+  "version": "2.2.1",
   "type": "module",
   "scripts": {
     "dev": "node update_build.js && vite",
