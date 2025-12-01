@@ -684,19 +684,31 @@ def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: b
         5. **NO DUPLICATES:** Do not list the same news item in multiple sections. Choose the *single best* section for it.
         6. **COMPETITOR ALERT:** Treat "Microsoft Purview" as a COMPETITOR, not a partner, for the purpose of this report.
         7. **SELF-EXCLUSION:** Do NOT include "Theta Lake" press releases or news in the "Competitive Intelligence" section. Place them in "Cooperative & Partner Updates" if relevant, or omit if minor.
-        8. **REGULATORY PRIORITIZATION:**
+        
+        **STRICT INCLUSION CRITERIA (MUST MATCH ONE):**
+        - **Compliance & Governance:** News about recordkeeping, archiving, eDiscovery, or supervision.
+        - **AI Safety & Regulation:** News about AI bias, hallucinations, "human in the loop", or AI governance rules.
+        - **New Communication Modalities:** News about *new* features in Zoom/Teams/Webex that create *new* compliance risks (e.g., Whiteboards, Huddles, AI Summaries).
+        - **Major Corporate Moves:** Significant M&A, Funding (> $50M), or C-level executive changes at Competitors/Partners.
+
+        **STRICT NEGATIVE CONSTRAINTS (DO NOT INCLUDE):**
+        - **Generic Security News:** Exclude general vulnerabilities (CVEs), patches, ransomware, or "zero-day" exploits UNLESS they specifically mention "compliance failure" or "recordkeeping".
+        - **Stock Market Noise:** Exclude daily stock price fluctuations or quarterly earnings reports (unless they mention specific product strategy shifts).
+        - **Marketing Fluff:** Exclude generic "we are excited to announce" awards or minor partnership fluff without substance.
+        - **Irrelevant Features:** Exclude minor UI updates (e.g., "Dark Mode", "New Emojis") unless they impact data capture.
+
+        **REGULATORY PRIORITIZATION:**
            - **HIGH PRIORITY:** Communication Compliance (recordkeeping, off-channel comms), AI Governance/Regulation, and Digital Communications Governance (DCGA).
-           - **LOW PRIORITY:** General security news (e.g., vulnerabilities, patches, ransomware) UNLESS it has a direct compliance/governance angle.
            - **MANDATORY:** "SEC Division of Examinations 2026 Priorities" must be included.
         
-        10. **MUTUALLY EXCLUSIVE CATEGORIZATION (CRITICAL):**
+        **MUTUALLY EXCLUSIVE CATEGORIZATION (CRITICAL):**
            - **Regulatory Radar:** STRICTLY for news driven by **Agencies** (SEC, FINRA, FCA, etc.) targeting **Financial Institutions** (Banks, Broker-Dealers). This includes fines, penalties, settlements, and new rules.
            - **Competitive Intelligence:** STRICTLY for news driven by **Vendors** (Competitors). This includes product launches, features, partnerships, and funding.
            - **OVERLAP RULE:** If a Competitor is fined, place this **ONLY in Regulatory Radar**.
            - **NO DUPLICATES:** A story must appear in ONE section only.
            - **NOTE:** It is rare for a Vendor to be fined. Focus Regulatory Radar on the *customers* (Banks) getting fined.
         
-        9. **COMPETITOR WEIGHTING:**
+        **COMPETITOR WEIGHTING:**
            - **CRITICAL:** Prioritize **ANY significant news** from direct competitors (e.g., Product Launches, Major Partnerships, Certifications, Funding, Acquisitions).
            - **Certifications** (ISO, SOC2, FedRAMP) and **AI Governance** features are particularly high-threat and MUST be included.
            - Ensure the "Behavox ISO/IEC 42001 Certification" is included if present in the raw data.
@@ -715,8 +727,9 @@ def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: b
         - Start with a "TL;DR: The Weekly Pulse" (Executive Summary).
         - Group by: "Cooperative & Partner Updates", "Competitive Landscape", "Regulatory Radar".
         - **MANDATORY:** END EVERY BULLET POINT WITH THE DATE/TIME: ... `[Nov 25, 2025 10:00 AM EST]`
+        - **MANDATORY:** EVERY SINGLE NEWS ITEM MUST HAVE A "THETA LAKE TAKE". NO EXCEPTIONS.
         - For each item, provide the news/update first.
-        - Then, add a "Theta Lake Take" blockquote: `> **Theta Lake Take:** [Badge] Analysis...`
+        - Then, IMMEDIATELY follow with a "Theta Lake Take" blockquote: `> **Theta Lake Take:** [Badge] Analysis...`
         - Badges must be one of: [Sales Validation], [Opportunity], [Risk], [Threat], [Validation].
         - Cite sources with links: `([Source Name](url))`.
         
