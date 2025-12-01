@@ -156,8 +156,9 @@ def search_exa(query: str, days_back: int = 7, max_results: int = 5):
             for item in data['results']:
                 title = item.get('title', 'No Title')
                 link = item.get('url', '#')
+                date = item.get('publishedDate', 'Unknown Date')
                 text = item.get('text', '')[:300] # Truncate text for snippet
-                formatted_results += f"- **{title}** ({link}): {text}...\n"
+                formatted_results += f"- **{title}** ({link}) [Date: {date}]: {text}...\n"
 
         return formatted_results if formatted_results else "No results found."
 
