@@ -429,7 +429,7 @@ export default function ReportViewer({ report, onDeepDive, deepDiveCache = {} })
                                     ),
                                 }}
                             >
-                                {block.content + (block.children ? '\n' + block.children.map(c => typeof c === 'string' ? c : c.content).join('\n') : '')}
+                                {block.content + (block.children && block.children.length > 0 && typeof block.children[0] === 'string' ? '\n' + block.children.join('\n') : '')}
                             </ReactMarkdown>
 
                             {/* Render children blocks if they are structured (e.g. items inside sections) */}

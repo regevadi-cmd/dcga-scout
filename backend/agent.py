@@ -699,7 +699,7 @@ def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: b
 
         **REGULATORY PRIORITIZATION:**
            - **HIGH PRIORITY:** Communication Compliance (recordkeeping, off-channel comms), AI Governance/Regulation, and Digital Communications Governance (DCGA).
-           - **MANDATORY:** "SEC Division of Examinations 2026 Priorities" must be included.
+           - **EXAMPLES:** "SEC Division of Examinations 2026 Priorities" (if relevant), new AI rules, or major fines.
         
         **MUTUALLY EXCLUSIVE CATEGORIZATION (CRITICAL):**
            - **Regulatory Radar:** STRICTLY for news driven by **Agencies** (SEC, FINRA, FCA, etc.) targeting **Financial Institutions** (Banks, Broker-Dealers). This includes fines, penalties, settlements, and new rules.

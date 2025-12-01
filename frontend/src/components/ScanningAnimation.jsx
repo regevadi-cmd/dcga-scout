@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Search, Radar, Zap, CheckCircle2, Loader2 } from 'lucide-react'
+import { Search, Radar, Zap, CheckCircle2, Loader2, XCircle } from 'lucide-react'
 
-export default function ScanningAnimation({ searchProvider = 'tavily' }) {
+export default function ScanningAnimation({ searchProvider = 'tavily', error = null }) {
     const [progressStep, setProgressStep] = useState(0)
 
     const providerNames = {
@@ -24,6 +24,8 @@ export default function ScanningAnimation({ searchProvider = 'tavily' }) {
     ]
 
     useEffect(() => {
+        if (error) return // Stop progress on error
+
         let currentStep = 0
 
         const runStep = () => {
@@ -37,7 +39,7 @@ export default function ScanningAnimation({ searchProvider = 'tavily' }) {
         }
 
         runStep()
-    }, [searchProvider])
+    }, [searchProvider, error])
 
     const currentStepData = steps[progressStep]
 
@@ -144,13 +146,24 @@ export default function ScanningAnimation({ searchProvider = 'tavily' }) {
                     gap: '0.5rem',
                     justifyContent: 'center'
                 }}>
-                    {currentStepData.success ? (
+                    {error ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444' }}>
+                            <XCircle size={24} />
+                            <span>Scan Failed</span>
+                        </div>
+                    ) : currentStepData.success ? (
                         <CheckCircle2 size={24} style={{ color: '#10b981' }} />
                     ) : (
                         <Loader2 size={20} className="spin" style={{ color: '#3b82f6' }} />
                     )}
-                    {currentStepData.message}
+                    {error ? "" : currentStepData.message}
                 </h3>
+
+                {error && (
+                    <p style={{ color: '#ef4444', marginTop: '0.5rem', fontWeight: 500 }}>
+                        {error}
+                    </p>
+                )}
 
                 {/* Progress Bar */}
                 <div style={{
