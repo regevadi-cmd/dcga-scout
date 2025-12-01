@@ -730,6 +730,7 @@ def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: b
         - **MANDATORY:** EVERY NEWS ITEM (OR GROUP) MUST HAVE A "THETA LAKE TAKE". NO EXCEPTIONS.
         - **INTELLIGENT GROUPING:** You MAY group similar items together (e.g., multiple new features for Microsoft Teams) into a single bullet point.
         - If grouped, provide a SINGLE "Theta Lake Take" that covers the entire group.
+        - **NO SUMMARY LISTS:** Do NOT provide a list of news items at the start of a section. Combine the news and the analysis into a single block for each item immediately.
         - For each item (or group), provide the news/update first.
         - Then, IMMEDIATELY follow with a "Theta Lake Take" blockquote: `> **Theta Lake Take:** [Badge] Analysis...`
         - Badges must be one of: [Sales Validation], [Opportunity], [Risk], [Threat], [Validation].
