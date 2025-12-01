@@ -728,7 +728,15 @@ def run_agent(time_range: str, search_provider: str = "tavily", use_mock_data: b
         - Group by: "Cooperative & Partner Updates", "Competitive Landscape", "Regulatory Radar".
         - **MANDATORY:** END EVERY BULLET POINT WITH THE DATE/TIME: ... `[Nov 25, 2025 10:00 AM EST]`
         - **MANDATORY:** EVERY NEWS ITEM (OR GROUP) MUST HAVE A "THETA LAKE TAKE". NO EXCEPTIONS.
-        - **INTELLIGENT GROUPING:** You MAY group similar items together (e.g., multiple new features for Microsoft Teams) into a single bullet point.
+        - **INTELLIGENT GROUPING:** You MAY group similar items together (e.g., multiple new features for Microsoft Teams).
+        - **CRITICAL FORMATTING RULE FOR GROUPS:** If you group items, you MUST combine them into a SINGLE bullet point paragraph. Do NOT list them on separate lines.
+        - Example of BAD grouping (Do NOT do this):
+          * News A
+          * News B
+          > Take
+        - Example of GOOD grouping (DO THIS):
+          * **News:** Microsoft Teams introduced Feature A AND Feature B. ([Source](url))
+          > **Theta Lake Take:** ...
         - If grouped, provide a SINGLE "Theta Lake Take" that covers the entire group.
         - **NO SUMMARY LISTS:** Do NOT provide a list of news items at the start of a section. Combine the news and the analysis into a single block for each item immediately.
         - For each item (or group), provide the news/update first.
